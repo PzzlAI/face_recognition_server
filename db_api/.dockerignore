@@ -1,0 +1,8 @@
+venv
+docker-compose.yml
+Dockerfile
+docker-compose.dev.yml
+.gitignore
+readme.txt
+implementation_details.txt
+app_alternative.py

@@ -1,0 +1,100 @@
+al final lo que hay que retornar a los servidores de Dchain es:
+
+
+codigo_de_empresa
+codigo_de_colaborador
+fecha completa(hora de servidor) año-mes-dia 00:00:00 hh:mm:ss 
+serial/identificador de dispositivo
+latitud
+longitud
+
+se retorna cuando se ha validado la identidad de la persona.
+
+
+avances para la proxima semanar:
+modificar la base de datos y api para tomar en cuanta los nuevos campos
+
+# posiblemente una sola aplicacion para ambos administrador
+
+
+# este es para el caso de multiples empresas para el mismo servidor.
+
+# hay que guardar fecha de creacion, y fecha de actualizacion.
+# buscar forma para poder cambiar o borrar imagen especifica de un colaborador. 
+# en caso de borrar hay que guardar esa fecha. 
+# posiblemente tener coleccion para administradores y otro para colaboradores. posiblemente puede ser la misma, haciendo un campo para administrador.
+# lo mejor seria tener colecciones separadas para administradores para poder guardar el usuario y contraseña.
+
+# pensar las funcionalidades que va a tener el administrador en terminos de crud. posiblemente tener un ui para poder hacer cambios a imagenes individuales. 
+# el ui del administrador puede ser simplemente una vista optimizada de la base de datos, con todos los campos e imagenes de forma editable.
+
+# 
+
+# omega administrador del servidor/ usuario que tiene la responsabilidad de la insercion inicial de super administradores para todas las empresas.
+
+# super administrador de la empresa. tiene la responsabilidad de crear nuevos administradores para la empresa a la que trabaja.
+
+
+# super administrador
+# {
+#     uuid/index: , 
+#     codigo_de_empresa: ,
+#     codigo_de_colaborador: ,
+#     usuario: ,    # puede ser basado en patron o buscar otro formato de autenticacion.
+#     contraseña: ,
+#     nombre_completo: ,
+#     serial_de_dispositivo: ,
+#     fecha_de_creacion:
+#     fecha_de_actualizacion: ,
+#
+# }
+
+
+# administrador
+# {
+#     uuid/index: , 
+#     codigo_de_empresa: ,
+#     codigo_de_colaborador: ,
+#     usuario: ,    # puede ser basado en patron o buscar otro formato de autenticacion.
+#     contraseña: ,
+#     nombre_completo: ,
+#     serial_de_dispositivo: ,
+#     fecha_de_creacion:
+#     fecha_de_actualizacion: ,
+# }
+
+# # colaboradores 
+# {
+#     uuid/index: ,
+#     codigo_de_empresa: ,
+#     codigo_de_colaborador: ,
+#     nombre_completo: ,
+#     image_paths: [],
+#     serial_de_dispositivo: ,
+#     fecha_de_creacion: ,
+#     fecha_de_actualizacion: ,
+# }
+
+# # posiblemente coleccion de colaboradores borrados
+# {
+#     lo mismo que colaborador normal.
+# }
+
+
+# separar update en ambos create y update.
+
+# uno puede saber de que empresa es el administrador asi que no hay que pasar el codigo en el ui.
+
+# ! importante tomar en cuenta el proceso de cacheo para agilizar la busqueda, ese proceso se tendra que ver como se hace,
+# porque hay que updatear el campo de serial_de_dispositivo de los colaboradores, administradores, y super_administradores.
+# esto dependera de como se implemente en la aplicacion movil.
+
+para hacer el login del administrador necesitamos pasar:
+
+usuario
+contraseña
+cached: 
+codigo de empresa, 
+codigo de colaborador, 
+serial del dispositivo 
+(posiblemente: object_ID)
