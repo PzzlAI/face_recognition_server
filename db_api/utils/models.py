@@ -16,7 +16,7 @@ class admin_credentials_return(BaseModel):
     access: bool
     status: str
     name: Optional[str] = None
-    # company_code: Optional[str] = None
+    company_code: Optional[str] = None
     # employee_code: Optional[str] = None
 
 class collaborator_schema(BaseModel):
