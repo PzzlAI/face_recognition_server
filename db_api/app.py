@@ -9,6 +9,7 @@ import os
 from bson.json_util import dumps
 import datetime
 import utils.models as models
+import utils.auxiliary_functions as auxiliary_functions
 
 app = FastAPI()
 # todo: posiblemente refactorizar los procesos de remove y restore, pueden ser juntados en una sola ruta respectivamente.
@@ -77,7 +78,7 @@ async def admin_login(admin_credentials: models.admin_credentials):
             continue
 
         if x["password"] == admin_credentials.password:
-            return{"access": True, "status": "found, password correct", "name": x["nombre_completo"], x["company_code"]}
+            return{"access": True, "status": "found, password correct", "name": x["nombre_completo"], "company_code": x["company_code"]}
 
         if x["password"] != admin_credentials.password:
             return{"access": False, "status": "found, password incorrect", "name": x["nombre_completo"]}
@@ -221,7 +222,6 @@ async def update_collaborator(company_code: str = Form(...), employee_code: str 
             with open(image_path,'wb') as image:
                 shutil.copyfileobj(file.file, image)
 
-            # todo: cuando se cambia a un bd para todas las empresas hay que usar tambien el codigo de compañia para hace el update. 
             employee = { "employee_code": employee_code }
             new_path = { "$push": { "image_paths": image_path }, "$set": {"updated": datetime.datetime.now()} }
 
@@ -264,9 +264,12 @@ async def read(employee_code_model: models.employee_code_model):
         collection = db["colaboradores"]
 
         employee = { "employee_code": employee_code_model.employee_code }
-        x = collection.find_one(employee)
-        print(x)
-        return(dumps(x))
+        employee_data = collection.find_one(employee)
+
+        image_list = [path for path in employee_data['image_paths']]    
+        
+        return auxiliary_functions.zipfiles(image_list)
+
     except Exception as e:
         print(e)
     finally:
