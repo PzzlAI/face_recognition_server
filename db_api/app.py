@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from fastapi import FastAPI, File, UploadFile,Form
 import pymongo
 from pymongo import MongoClient
@@ -125,37 +125,51 @@ async def create_company(admin_schema: models.admin_schema):
 # determinar si este proceso se hace con imagen inicial o sin image, por ahora esta sin imagen.
 # tomar en cuenta que en este punto no se sabe el serial del dispositivo del colaborador,
 # asi que se tendra que updatear ese field cuando el colaborador haga su primera marcacion
-# con la aplicacion. 
+# con la aplicacion.
+
+# no se puede usar pydantic models junto con upload file. por lo cual hay que hacerlo de esta forma,
+# este deberia ser el unico que se debe hacer de esta forma, en terminos del cliente no hay diferencia
+# en el formato de la peticion.
 @app.post("/create_collaborator", status_code = 201)
-async def create_collaborator(collaborator_schema: models.collaborator_schema):
+async def create_collaborator(company_code: str = Form(...), 
+                              employee_code: str = Form(...),
+                              nombre_completo: str =Form(...),
+                              files: List[UploadFile] = File(...) ):
+
     db=""
     try:
-        db = get_db(collaborator_schema.company_code)
+        db = get_db(company_code)
 
         if not db:
             return "company doesnt exist"
         
         collection = db["colaboradores"]
-        directory = "./db/" + collaborator_schema.company_code + "/" + collaborator_schema.employee_code
+
         
 
+        directory = "./db/" + company_code + "/" + employee_code
         os.mkdir(directory)
-        # este es el codigo para crear imagen, por ahora solo se crea el espacio, no se pone imagen.
-        # image_path = directory + "/" + employee_code + "_" + str(len(os.listdir(directory))) + ".jpg"
-        # with open(image_path,'wb') as image:
-        #     shutil.copyfileobj(file.file, image)
+        
+        image_paths = []
+        for file in files:
+            image_path = directory + "/" + employee_code + "_" + str(len(os.listdir(directory))) + ".jpg"
+            with open(image_path,'wb') as image:
+                shutil.copyfileobj(file.file, image)
+                image_paths.append(image_path)
+                
+
         current_date = datetime.datetime.now()
-        colaborador = {"company_code": collaborator_schema.company_code, 
-                        "employee_code": collaborator_schema.employee_code,
-                        "nombre_completo": collaborator_schema.nombre_completo,
-                        "image_paths": [],
+        colaborador = {"company_code": company_code, 
+                        "employee_code": employee_code,
+                        "nombre_completo": nombre_completo,
+                        "image_paths": image_paths,
                         "serial_de_dispositivo": "",
                         "created": current_date, 
                         "updated": current_date}
 
-        print(colaborador)
         collection.insert_one(colaborador)
         x = collection.find()
+
         return(dumps(x))
     except Exception as e:
         print(e)
@@ -266,7 +280,8 @@ async def read(employee_code_model: models.employee_code_model):
         employee = { "employee_code": employee_code_model.employee_code }
         employee_data = collection.find_one(employee)
 
-        image_list = [path for path in employee_data['image_paths']]    
+        image_list = [path for path in employee_data['image_paths']]
+        print(image_list)
         
         return auxiliary_functions.zipfiles(image_list)
 
