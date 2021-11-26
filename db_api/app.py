@@ -48,7 +48,7 @@ def create_db(company_code):
 
 @app.get('/')
 def ping_server():
-    return "Face database api is running"
+    return "Face database api is running!"
 
 # por ahora esta funcion va a ser usada sin tomar en cuenta el caching ni hahsing. y hay que ver si terminamos usando el mismo endpoint para ambas cosas o si seran separadas.
 @app.post('/admin_login')
@@ -130,7 +130,7 @@ async def create_company(admin_schema: models.admin_schema):
 # no se puede usar pydantic models junto con upload file. por lo cual hay que hacerlo de esta forma,
 # este deberia ser el unico que se debe hacer de esta forma, en terminos del cliente no hay diferencia
 # en el formato de la peticion.
-@app.post("/create_collaborator", status_code = 201)
+@app.post("/create_collaborator")
 async def create_collaborator(company_code: str = Form(...), 
                               employee_code: str = Form(...),
                               nombre_completo: str =Form(...),
@@ -141,13 +141,18 @@ async def create_collaborator(company_code: str = Form(...),
         db = get_db(company_code)
 
         if not db:
-            return "company doesnt exist"
+            return {'status': "company doesnt exist"}
+        
+        directory = "./db/" + company_code + "/" + employee_code
+
+        # todo: error handling de cuando ya existe el colaborador. por ahora voy a poner esto, pero hay que ver que es apropiado hacer.
+        if os.path.isdir(directory):
+            return {'status': 'collaborator already exists'}
         
         collection = db["colaboradores"]
 
         
 
-        directory = "./db/" + company_code + "/" + employee_code
         os.mkdir(directory)
         
         image_paths = []
