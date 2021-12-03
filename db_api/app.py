@@ -151,8 +151,6 @@ async def create_collaborator(company_code: str = Form(...),
         
         collection = db["colaboradores"]
 
-        
-
         os.mkdir(directory)
         
         image_paths = []
@@ -219,12 +217,11 @@ async def create_admin(admin_schema: models.admin_schema):
 
 # todo: ver si se necesita el update de admin, ya sea por updatear contraseña u otra cosa.
 
-# update funciona para meter imagenes al espacio del colaborador. En el caso de que no exista se crea, pero esto es sujeto a cambio.
-# ! En el futuro cuando posiblemete cambiemos a 1 db para todos, para buscar un colaborador hay que usar codigo de compañia y de colaborador,
-# esto es ineficiente, porque es una busqueda de O(n), como no se usan esos campos como indice. si igualmente no esta ocacionando problema
-# entonces lo dejamos asi.
-@app.put("/update_collaborator",  status_code=200)
-async def update_collaborator(company_code: str = Form(...), employee_code: str = Form(...), file: UploadFile = File(...)):
+@app.put("/update_collaborator")
+async def update_collaborator(company_code: str = Form(...), 
+                              employee_code: str = Form(...),
+                              nombre_completo: str =Form(...),
+                              files: List[UploadFile] = File(...) ):
     db=""
     try:
         db = get_db(company_code)
@@ -235,34 +232,27 @@ async def update_collaborator(company_code: str = Form(...), employee_code: str 
         collection = db["colaboradores"]
         directory = "./db/" + company_code + "/" + employee_code
         
+        # first delete all files. 
+        for f in os.listdir(directory):
+            os.remove(os.path.join(directory, f))
 
-        if os.path.isdir(directory):
+        # loop through image list and copy to folder, then add path to list.
+        image_paths = []
+        for file in files:
             image_path = directory + "/" + employee_code + "_" + str(len(os.listdir(directory))) + ".jpg"
             with open(image_path,'wb') as image:
                 shutil.copyfileobj(file.file, image)
+                image_paths.append(image_path)
 
-            employee = { "employee_code": employee_code }
-            new_path = { "$push": { "image_paths": image_path }, "$set": {"updated": datetime.datetime.now()} }
+        # find employee and modify relevant data.
+        employee = { "employee_code": employee_code }
+        new_path = { "$set": { "image_paths": image_paths }, "$set": {"updated": datetime.datetime.now()}, "$set": {"nombre_completo": nombre_completo} }
+        collection.update_one(employee, new_path)
 
-            collection.update_one(employee, new_path)
-            x = collection.find()
-            return(dumps(x))
+        # for now we return the mongodb document just for developement purposes.
+        x = collection.find()
+        return(dumps(x))
 
-        # por ahora se va a crear en caso de que no exista, pero eso puede cambiar.
-        else:
-            os.mkdir(directory)
-            image_path = directory + "/" + employee_code + "_" + str(len(os.listdir(directory))) + ".jpg"
-            with open(image_path,'wb') as image:
-                shutil.copyfileobj(file.file, image)
-
-            current_date = datetime.datetime.now()
-            colaborador = {"company_code": company_code, "employee_code": employee_code, "image_paths": [image_path], "created": current_date, "updated": current_date}
-
-            print(colaborador)
-            collection.insert_one(colaborador)
-            # se retorna toda la base de datos, esto se va a borrar en algun punto, solo esta para desarrollo.
-            x = collection.find()
-            return(dumps(x))
     except Exception as e:
         print(e)
     finally:
