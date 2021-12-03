@@ -79,8 +79,8 @@ if __name__ == "__main__":
     company_count = 3
     collaborator_count = 3
     admin_count = 3
-    ip = '198.199.82.209'
-    # ip = 'localhost'
+    #ip = '198.199.82.209'
+    ip = 'localhost'
     generate_mock_companies(endpoint = 'http://' + ip +':5000/create_company', company_count = company_count)
     generate_mock_collaborators(endpoint = 'http://' + ip +':5000/create_collaborator', amount = collaborator_count, company_count = company_count)
     generate_mock_administrators(endpoint = 'http://' + ip +':5000/create_admin', amount = admin_count, company_count = company_count)
