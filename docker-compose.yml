@@ -1,0 +1,35 @@
+version: '3.3'
+
+services:
+  app_db:
+    build: ./db_api
+    command: python -u app.py
+    ports:
+      - "5000:5000"
+    volumes:
+      - app_db:/app/db
+    links:
+      - db
+  app_df:
+    build: ./df_api
+    command: python -u app.py
+    ports:
+      - "8000:8000"
+    volumes:
+      - app_db:/app/db
+    links:
+      - db
+  db:
+    image: mongo:latest
+    hostname: test_mongodb
+    environment:
+      - MONGO_INITDB_DATABASE=face_recognition_db
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=pass
+    volumes:
+      - mongodbdata:/data/db
+    ports:
+      - 27017:27017
+volumes:
+  app_db:
+  mongodbdata:
