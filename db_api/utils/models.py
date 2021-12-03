@@ -35,6 +35,10 @@ class collaborator_return_model(BaseModel):
     employee_code: str
     nombre_completo: str
 
+class update_collaborator_return(BaseModel):
+    staus: str 
+
+
 
 
 
