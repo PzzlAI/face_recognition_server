@@ -1,5 +1,5 @@
 import uvicorn
-from fastapi import FastAPI, File, UploadFile, Body
+from fastapi import FastAPI, File, UploadFile, Body, Form
 from deepface import DeepFace
 import os
 import shutil
@@ -10,15 +10,20 @@ app = FastAPI()
 
 IMAGEDIR = "./tmp/"
 
+
+@app.get('/')
+def ping_server():
+    return "DeepFace api is running!"
+
 @app.post('/verify')
-async def recognize_person(company_code: str, employee_code: str, image: UploadFile = File(...)):
+async def recognize_person(company_code: str = Form(...), employee_code: str = Form(...), file: UploadFile = File(...)):
 
     print("recibiendo imagen")
     image_path = "./db/" + company_code + "/" + employee_code
 
     # guardar archivo como jpg en tmp folder
-    with open(f"{IMAGEDIR}image.jpg", "wb") as f:
-        f.write(image.file)
+    with open(f"{IMAGEDIR}image.jpg", "wb") as image:
+        shutil.copyfileobj(file.file, image)
     
     # encontrar imagenes parecidas en carpeta de imagenes
     metrics = ["cosine", "euclidean", "euclidean_l2"]
@@ -45,17 +50,12 @@ async def recognize_person(company_code: str, employee_code: str, image: UploadF
     try:
         if(not df.empty):
             print(df.head())
-            if df['VGG-Face_cosine'][0] < 0.4:
-                location = df['identity'][0].replace('./images\\', '').split('/')
-                name = location[0]
-                print("persona encontrada en base de datos, su nombre es %s" % (name))
-                return {"status" : name}
+            if df['Facenet_cosine'][0] < 0.4:
+                return {"status" : "validacion exitosa"}
             else:
-                print("persona no encontrada en base de datos")
-                return {"status" : "person not found in database!"}
+                return {"status" : "no se reconoce persona"}
         else:
-            print("persona no encontrada en base de datos")
-            return {"status" : "person not found in database!"}
+            return {"status" : "no se reconoce persona"}
         
     except:
         print("error de inferencia")
