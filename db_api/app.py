@@ -404,7 +404,7 @@ async def delete_collaborator(employee_code_model: models.employee_code_model):
 
         try:
             shutil.rmtree("./db/"+ employee_code_model.company_code + "/" + employee_code_model.employee_code)
-            return "se borros exitosamente"
+            return "se borro exitosamente"
         except OSError as e:
             return("Error: %s - %s." % (e.filename, e.strerror))
     except Exception as e:
