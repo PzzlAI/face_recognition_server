@@ -48,7 +48,7 @@ def create_db(company_code):
 
 @app.get('/')
 def ping_server():
-    return "Face database api is running!"
+    return "Face database api is running!!!"
 
 # por ahora esta funcion va a ser usada sin tomar en cuenta el caching ni hahsing. y hay que ver si terminamos usando el mismo endpoint para ambas cosas o si seran separadas.
 @app.post('/admin_login')
@@ -246,7 +246,7 @@ async def update_collaborator(company_code: str = Form(...),
 
         # find employee and modify relevant data.
         employee = { "employee_code": employee_code }
-        new_path = { "$set": { "image_paths": image_paths }, "$set": {"updated": datetime.datetime.now()}, "$set": {"nombre_completo": nombre_completo} }
+        new_path = { "$set": { "image_paths": image_paths , "updated": datetime.datetime.now(), "nombre_completo": nombre_completo} }
         collection.update_one(employee, new_path)
 
         # for now we return the mongodb document just for developement purposes.
