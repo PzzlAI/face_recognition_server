@@ -7,4 +7,6 @@ ADD . /app
 
 WORKDIR /app
 
+RUN mkdir tmp
+
 RUN pip install -r requirements.txt
