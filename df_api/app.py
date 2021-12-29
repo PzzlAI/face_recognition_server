@@ -4,11 +4,26 @@ from deepface import DeepFace
 import os
 import shutil
 from starlette.testclient import TestClient
+from pymongo import MongoClient
 
 app = FastAPI()
 
 
 IMAGEDIR = "./tmp/"
+
+def get_db(company_code):
+    client = MongoClient(host='test_mongodb',
+                         port=27017, 
+                         username='root', 
+                         password='pass',
+                        authSource="admin")
+                        
+    dbnames = client.list_database_names()
+    if company_code in dbnames:   
+        db = client[company_code]
+        return db
+    else:
+        return False
 
 
 @app.get('/')
@@ -29,7 +44,7 @@ async def recognize_person(company_code: str = Form(...), employee_code: str = F
     metrics = ["cosine", "euclidean", "euclidean_l2"]
     models = ["VGG-Face", "Facenet", "Facenet512", "OpenFace", "DeepFace", "DeepID", "ArcFace", "Dlib"]
 
-    df = DeepFace.find(img_path = r"./tmp/image.jpg", db_path = image_path, distance_metric = metrics[0], model_name = models[1])
+    df = DeepFace.find(img_path = r"./tmp/image.jpg", db_path = image_path, distance_metric = metrics[0], model_name = models[1], enforce_detection = False)
 
     # borrar imagenes de tmp folder
     for filename in os.listdir(IMAGEDIR):
@@ -50,15 +65,28 @@ async def recognize_person(company_code: str = Form(...), employee_code: str = F
     try:
         if(not df.empty):
             print(df.head())
-            if df['Facenet_cosine'][0] < 0.4:
-                return {"status" : "validacion exitosa"}
+            if df['Facenet_cosine'][0] < 0.4:     
+                db = get_db(company_code)
+
+                collection = db["colaboradores"]
+
+                collaborator = { "employee_code": employee_code}
+                x = collection.find_one(collaborator)
+
+
+                return {"access": True, "status": "found, face recognized", "name": x["nombre_completo"]}
             else:
-                return {"status" : "no se reconoce persona"}
+                return {"access": False, "status": "found, face not recognized", "name": None}
         else:
-            return {"status" : "no se reconoce persona"}
+            return {"access": False, "status": "no similar faces found", "name": None}
         
-    except:
-        print("error de inferencia")
+    except Exception as e:
+        print(e)
+        return("error de inferencia")
+
+    # finally:
+    #     if db and type(db)==MongoClient:
+    #         db.close()
 
 # iniciar servidor
 if __name__ == '__main__':
