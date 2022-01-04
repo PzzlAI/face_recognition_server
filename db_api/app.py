@@ -149,7 +149,7 @@ async def create_collaborator(company_code: str = Form(...),
         if os.path.isdir(directory):
             return {'status': 'collaborator already exists'}
         
-        collection = db["colaboradores"]
+        collaborators = db["colaboradores"]
 
         os.mkdir(directory)
         
@@ -162,7 +162,7 @@ async def create_collaborator(company_code: str = Form(...),
                 
 
         current_date = datetime.datetime.now()
-        colaborador = {"company_code": company_code, 
+        collaborator = {"company_code": company_code, 
                         "employee_code": employee_code,
                         "nombre_completo": nombre_completo,
                         "image_paths": image_paths,
@@ -170,8 +170,13 @@ async def create_collaborator(company_code: str = Form(...),
                         "created": current_date, 
                         "updated": current_date}
 
-        collection.insert_one(colaborador)
-        x = collection.find()
+        collaborators.insert_one(collaborator)
+        x = collaborators.find()
+
+        # crear coleccion para guardar marcaciones del colaborador. 
+        marcador = {"company_code": company_code, "employee_code": employee_code, "marcaciones": []}
+        marcaciones = db["marcaciones"]
+        marcaciones.insert_one(marcador)
 
         return(dumps(x))
     except Exception as e:
@@ -272,7 +277,7 @@ async def read(employee_code_model: models.employee_code_model):
         
         collection = db["colaboradores"]
 
-        employee = { "employee_code": employee_code_model.employee_code }
+        employee = { "employee_code": employee_code_model.employee_code}
         employee_data = collection.find_one(employee)
 
         image_list = [path for path in employee_data['image_paths']]
@@ -328,7 +333,7 @@ async def remove_collaborator(employee_code_model: models.employee_code_model):
         collection = db["colaboradores"]
         deleted_collection = db["colaboradores_borrados"]
 
-        employee = { "employee_code": employee_code_model.employee_code }
+        employee = { "employee_code": employee_code_model.employee_code}
         
         # copiar datos de empleado
         employee_document = collection.find_one(employee)
@@ -367,7 +372,7 @@ async def remove_admin(employee_code_model: models.employee_code_model):
         collection = db["administradores"]
         deleted_collection = db["administradores_borrados"]
 
-        employee = { "employee_code": employee_code_model.employee_code }
+        employee = { "employee_code": employee_code_model.employee_code}
         
         # copiar datos de empleado
         employee_document = collection.find_one(employee)
@@ -450,7 +455,7 @@ async def restore_collaborator(employee_code_model: models.employee_code_model):
         collection = db["colaboradores"]
         deleted_collection = db["colaboradores_borrados"]
 
-        employee = { "employee_code": employee_code_model.employee_code }
+        employee = { "employee_code": employee_code_model.employee_code}
         
         # copiar datos de empleado
         employee_document = deleted_collection.find_one(employee)
@@ -486,7 +491,7 @@ async def restore_admin(employee_code_model: models.employee_code_model):
         collection = db["colaboradores"]
         deleted_collection = db["colaboradores_borrados"]
 
-        employee = { "employee_code": employee_code_model.employee_code }
+        employee = { "employee_code": employee_code_model.employee_code}
         
         # copiar datos de empleado
         employee_document = deleted_collection.find_one(employee)
