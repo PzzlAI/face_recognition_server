@@ -34,9 +34,17 @@ def ping_server():
 
 @app.post('/verify')
 async def recognize_person(company_code: str = Form(...), employee_code: str = Form(...), file: UploadFile = File(...)):
+    db = get_db(company_code)
+    if not db:
+        return "company doesnt exist"
 
+    
+    
     print("recibiendo imagen")
     image_path = "./db/" + company_code + "/" + employee_code
+
+    if not os.path.isdir(image_path):
+        return "employee doesnt exist"
 
     # guardar archivo como jpg en tmp folder
     with open(f"{IMAGEDIR}image.jpg", "wb") as image:
@@ -63,7 +71,6 @@ async def recognize_person(company_code: str = Form(...), employee_code: str = F
         if(not df.empty):
             print(df.head())
             if df['Facenet_cosine'][0] < 0.4:     
-                db = get_db(company_code)
 
                 collection = db["colaboradores"]
 
@@ -88,8 +95,18 @@ async def recognize_person(company_code: str = Form(...), employee_code: str = F
 
 @app.post('/marcacion')
 async def recognize_person(company_code: str = Form(...), employee_code: str = Form(...), file: UploadFile = File(...), latitude: str = Form(...), longitude: str = Form(...)):
+    # creo que estas pruebas no se tienen que hacer porque en esta posicion ya se hizo el 
+    # login, pero lo voy a dejar por ahora. 
+    
+    db = get_db(company_code)
+    if not db:
+        return "company doesnt exist"
+    
     print("recibiendo imagen")
     image_path = "./db/" + company_code + "/" + employee_code
+
+    if not os.path.isdir(image_path):
+        return "employee doesnt exist"
 
     # guardar archivo como jpg en tmp folder
     with open(f"{IMAGEDIR}image.jpg", "wb") as image:
@@ -117,7 +134,6 @@ async def recognize_person(company_code: str = Form(...), employee_code: str = F
         if(not df.empty):
             print(df.head())
             if df['Facenet_cosine'][0] < 0.4:     
-                db = get_db(company_code)
 
                 marcaciones = db["marcaciones"]
 
@@ -140,6 +156,7 @@ async def recognize_person(company_code: str = Form(...), employee_code: str = F
 async def leer_marcaciones(company_code, employee_code):
 
     db = get_db(company_code)
+
     marcaciones = db["marcaciones"]
     collaborator = { "employee_code": employee_code}
     x = marcaciones.find_one(collaborator)
