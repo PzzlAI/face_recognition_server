@@ -7,7 +7,12 @@ from starlette.testclient import TestClient
 from pymongo import MongoClient
 import datetime
 from bson.json_util import dumps
+from pydantic import BaseModel
 
+class employee_code_model(BaseModel):
+    company_code: str
+    employee_code: str
+    
 app = FastAPI()
 
 
@@ -153,12 +158,12 @@ async def recognize_person(company_code: str = Form(...), employee_code: str = F
 
 
 @app.post('/leer_marcaciones')
-async def leer_marcaciones(company_code: str, employee_code: str):
+async def leer_marcaciones(employee_code_model: employee_code_model):
 
-    db = get_db(company_code)
+    db = get_db(employee_code_model.company_code)
 
     marcaciones = db["marcaciones"]
-    collaborator = { "employee_code": employee_code}
+    collaborator = { "employee_code": employee_code_model.employee_code}
     x = marcaciones.find_one(collaborator)
 
     lista_marcaciones = []
