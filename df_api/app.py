@@ -153,7 +153,7 @@ async def recognize_person(company_code: str = Form(...), employee_code: str = F
 
 
 @app.post('/leer_marcaciones')
-async def leer_marcaciones(company_code, employee_code):
+async def leer_marcaciones(company_code: str, employee_code: str):
 
     db = get_db(company_code)
 
