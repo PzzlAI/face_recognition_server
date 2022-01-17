@@ -401,11 +401,13 @@ async def delete_collaborator(employee_code_model: models.employee_code_model):
         if not db:
             return "company doesnt exist"
 
-        collection = db["colaboradores"]
+        collaborators = db["colaboradores"]
+        marcaciones = db["marcaciones"]
 
         employee = { "employee_code": employee_code_model.employee_code }
         
-        collection.delete_one(employee)
+        collaborators.delete_one(employee)
+        marcaciones.delete_one(employee)
 
         try:
             shutil.rmtree("./db/"+ employee_code_model.company_code + "/" + employee_code_model.employee_code)
