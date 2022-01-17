@@ -1,5 +1,6 @@
 import uvicorn
 from fastapi import FastAPI, File, UploadFile, Body, Form
+from typing import Optional
 from deepface import DeepFace
 import os
 import shutil
@@ -9,10 +10,12 @@ import datetime
 from bson.json_util import dumps
 from pydantic import BaseModel
 
-class employee_code_model(BaseModel):
+class clock_in_list_model(BaseModel):
     company_code: str
     employee_code: str
-    
+    start: int
+    amount: Optional[int] = 20
+
 app = FastAPI()
 
 
@@ -58,8 +61,12 @@ async def recognize_person(company_code: str = Form(...), employee_code: str = F
     # encontrar imagenes parecidas en carpeta de imagenes
     metrics = ["cosine", "euclidean", "euclidean_l2"]
     models = ["VGG-Face", "Facenet", "Facenet512", "OpenFace", "DeepFace", "DeepID", "ArcFace", "Dlib"]
+    try:
+        df = DeepFace.find(img_path = r"./tmp/image.jpg", db_path = image_path, distance_metric = metrics[0], model_name = models[1])
+    except ValueError as e:
+        if str(e) == "Face could not be detected. Please confirm that the picture is a face photo or consider to set enforce_detection param to False.":
+            return{"access": False, "code": 4, "status": "face could not be detected", "name": None}
 
-    df = DeepFace.find(img_path = r"./tmp/image.jpg", db_path = image_path, distance_metric = metrics[0], model_name = models[1], enforce_detection = False)
 
     # borrar imagenes de tmp folder
     for filename in os.listdir(IMAGEDIR):
@@ -83,11 +90,11 @@ async def recognize_person(company_code: str = Form(...), employee_code: str = F
                 x = collection.find_one(collaborator)
 
 
-                return {"access": True, "status": "found, face recognized", "name": x["nombre_completo"]}
+                return {"access": True, "code": 1, "status": "found, face recognized", "name": x["nombre_completo"]}
             else:
-                return {"access": False, "status": "found, face not recognized", "name": None}
+                return {"access": False, "code": 2, "status": "found, face not recognized", "name": None}
         else:
-            return {"access": False, "status": "no similar faces found", "name": None}
+            return {"access": False, "code": 3, "status": "no similar faces found", "name": None}
         
     except Exception as e:
         return(e)
@@ -121,7 +128,11 @@ async def recognize_person(company_code: str = Form(...), employee_code: str = F
     metrics = ["cosine", "euclidean", "euclidean_l2"]
     models = ["VGG-Face", "Facenet", "Facenet512", "OpenFace", "DeepFace", "DeepID", "ArcFace", "Dlib"]
 
-    df = DeepFace.find(img_path = r"./tmp/image.jpg", db_path = image_path, distance_metric = metrics[0], model_name = models[1], enforce_detection = False)
+    try:
+        df = DeepFace.find(img_path = r"./tmp/image.jpg", db_path = image_path, distance_metric = metrics[0], model_name = models[1])
+    except ValueError as e:
+        if str(e) == "Face could not be detected. Please confirm that the picture is a face photo or consider to set enforce_detection param to False.":
+            return{"access": False, "code": 4, "status": "face could not be detected", "name": None}
 
     # borrar imagenes de tmp folder
     for filename in os.listdir(IMAGEDIR):
@@ -147,35 +158,41 @@ async def recognize_person(company_code: str = Form(...), employee_code: str = F
                 marcacion = { "$push": { "marcaciones": {"latitude": latitude, "longitude": longitude, "date": current_date} } }
                 marcaciones.update_one(collaborator, marcacion)
 
-                return {"access": True, "status": "found, face recognized"}
+                return {"access": True, "code": 1, "status": "found, face recognized"}
             else:
-                return {"access": False, "status": "found, face not recognized"}
+                return {"access": False, "code": 2, "status": "found, face not recognized"}
         else:
-            return {"access": False, "status": "no similar faces found"}
+            return {"access": False, "code": 3, "status": "no similar faces found"}
         
     except Exception as e:
         return(e)
 
 
 @app.post('/leer_marcaciones')
-async def leer_marcaciones(employee_code_model: employee_code_model):
+async def leer_marcaciones(clock_in_list_model: clock_in_list_model):
 
-    db = get_db(employee_code_model.company_code)
+    db = get_db(clock_in_list_model.company_code)
 
     marcaciones = db["marcaciones"]
-    collaborator = { "employee_code": employee_code_model.employee_code}
+    collaborator = { "employee_code": clock_in_list_model.employee_code}
     x = marcaciones.find_one(collaborator)
+    # por el momento lo mas facil es traer la lista completa a scope y luego hacer los procesos de reversa y slice.
+    # esto en realidad es malo, porque en teoria solo hay que traer de mongodb los valores que queremos, pero esta resultando
+    # dificil traducir del api de mongodb al api de pymongo. sobretodo con aggregate y project etc. asi que lo arreglare despues.
 
     lista_marcaciones = []
 
-    for i in x["marcaciones"]:
-        print(i)
+    for i in reversed(x["marcaciones"]):
         print("latitude: " + str(i["latitude"]) + " longitude: " + str(i["longitude"]) + " date: " + str(i["date"]))
         item = {"latitude": str(i["latitude"]), "longitude": str(i["longitude"]), "date": str(i["date"]) }
         lista_marcaciones.append(item)
+    print(len(lista_marcaciones))
 
+    start = clock_in_list_model.start
 
-    return{"marcaciones": lista_marcaciones}
+    end = start + clock_in_list_model.amount if start + clock_in_list_model.amount < len(lista_marcaciones) else len(lista_marcaciones)
+
+    return{"marcaciones": lista_marcaciones[start:end]}
 
 
 # iniciar servidor
