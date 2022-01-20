@@ -6,7 +6,8 @@ import os
 import shutil
 from starlette.testclient import TestClient
 from pymongo import MongoClient
-import datetime
+from datetime import datetime
+from pytz import timezone
 from bson.json_util import dumps
 from pydantic import BaseModel
 
@@ -154,7 +155,9 @@ async def recognize_person(company_code: str = Form(...), employee_code: str = F
                 marcaciones = db["marcaciones"]
 
                 collaborator = { "employee_code": employee_code}
-                current_date = datetime.datetime.now()
+
+                tz = timezone('EST')
+                current_date = datetime.now(tz)
                 marcacion = { "$push": { "marcaciones": {"latitude": latitude, "longitude": longitude, "date": current_date} } }
                 marcaciones.update_one(collaborator, marcacion)
 
@@ -185,6 +188,7 @@ async def leer_marcaciones(clock_in_list_model: clock_in_list_model):
     for i in reversed(x["marcaciones"]):
         print("latitude: " + str(i["latitude"]) + " longitude: " + str(i["longitude"]) + " date: " + str(i["date"]))
         item = {"latitude": str(i["latitude"]), "longitude": str(i["longitude"]), "date": str(i["date"]) }
+        print(item)
         lista_marcaciones.append(item)
     print(len(lista_marcaciones))
 
@@ -193,6 +197,35 @@ async def leer_marcaciones(clock_in_list_model: clock_in_list_model):
     end = start + clock_in_list_model.amount if start + clock_in_list_model.amount < len(lista_marcaciones) else len(lista_marcaciones)
 
     return{"marcaciones": lista_marcaciones[start:end]}
+
+@app.post("/validar_fotos")
+async def validar_fotos(company_code: str = Form(...), employee_code: str = Form(...)):
+
+    directory = "./db/" + company_code + "/" + employee_code
+    
+    if not os.path.isdir(directory):
+        return{"code": 5, "status": "directory doesnt exist"}
+
+    img_path = os.path.join(directory, os.listdir(directory)[0])
+    print(directory)
+    print(img_path)
+    try:
+        print("should be making the df")
+        metrics = ["cosine", "euclidean", "euclidean_l2"]
+        models = ["VGG-Face", "Facenet", "Facenet512", "OpenFace", "DeepFace", "DeepID", "ArcFace", "Dlib"]
+
+        df = DeepFace.find(img_path = img_path, db_path = directory, distance_metric = metrics[0], model_name = models[1])
+        print(df)
+    except ValueError as e:
+        print(e)
+        if str(e) == "Face could not be detected. Please confirm that the picture is a face photo or consider to set enforce_detection param to False.":
+            # first delete all files.
+            print("face not detected")
+            shutil.rmtree(directory)
+
+            return{"created": False, "code": 4, "status": "face could not be detected"}
+    
+    return{"created": True, "code": 6, "status": "representations created successfully"}
 
 
 # iniciar servidor

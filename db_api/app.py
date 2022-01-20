@@ -7,9 +7,11 @@ from pydantic import BaseModel
 import shutil
 import os
 from bson.json_util import dumps
-import datetime
+from datetime import datetime
+from pytz import timezone
 import utils.models as models
 import utils.auxiliary_functions as auxiliary_functions
+import requests
 
 app = FastAPI()
 # todo: posiblemente refactorizar los procesos de remove y restore, pueden ser juntados en una sola ruta respectivamente.
@@ -100,7 +102,11 @@ async def create_company(admin_schema: models.admin_schema):
             os.mkdir("./db/" + admin_schema.company_code)
             db = create_db(admin_schema.company_code)
             collection = db["super_administrador"]
-            current_date = datetime.datetime.now()
+
+
+            tz = timezone('EST')
+            current_date = datetime.now(tz)
+
             super_admin = {"company_code": admin_schema.company_code, 
                             "employee_code": admin_schema.employee_code, 
                             "username": admin_schema.username, 
@@ -160,8 +166,14 @@ async def create_collaborator(company_code: str = Form(...),
                 shutil.copyfileobj(file.file, image)
                 image_paths.append(image_path)
                 
+        # validate fotos
+        req = requests.post('http://app_df:8000/validar_fotos', data = {'company_code': company_code, "employee_code": employee_code})
+        resp = req.json()
+        if not resp["created"]:
+            return{"created": False, "code": 4, "status": "face could not be detected"}
 
-        current_date = datetime.datetime.now()
+        tz = timezone('EST')
+        current_date = datetime.now(tz)
         collaborator = {"company_code": company_code, 
                         "employee_code": employee_code,
                         "nombre_completo": nombre_completo,
@@ -178,10 +190,10 @@ async def create_collaborator(company_code: str = Form(...),
         marcaciones = db["marcaciones"]
         marcaciones.insert_one(marcador)
 
-        return(dumps(x))
+        return{"created": True, "code": 6, "status": "representations created successfully"}
     except Exception as e:
         print(e)
-        return(dumps(e))
+        return("error del servidor")
     finally:
         if type(db)==MongoClient:
             db.close()
@@ -200,7 +212,8 @@ async def create_admin(admin_schema: models.admin_schema):
         
         collection = db["administradores"]
         
-        current_date = datetime.datetime.now()
+        tz = timezone('EST')
+        current_date = datetime.now(tz)
         admin = {"company_code": admin_schema.company_code, 
                  "employee_code": admin_schema.employee_code, 
                  "username": admin_schema.username, 
