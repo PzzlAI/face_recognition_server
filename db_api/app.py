@@ -104,7 +104,7 @@ async def create_company(admin_schema: models.admin_schema):
             collection = db["super_administrador"]
 
 
-            tz = timezone('EST')
+            tz = timezone('America/Panama')
             current_date = datetime.now(tz)
 
             super_admin = {"company_code": admin_schema.company_code, 
@@ -172,7 +172,7 @@ async def create_collaborator(company_code: str = Form(...),
         if not resp["created"]:
             return{"created": False, "code": 4, "status": "face could not be detected"}
 
-        tz = timezone('EST')
+        tz = timezone('America/Panama')
         current_date = datetime.now(tz)
         collaborator = {"company_code": company_code, 
                         "employee_code": employee_code,
@@ -212,7 +212,7 @@ async def create_admin(admin_schema: models.admin_schema):
         
         collection = db["administradores"]
         
-        tz = timezone('EST')
+        tz = timezone('America/Panama')
         current_date = datetime.now(tz)
         admin = {"company_code": admin_schema.company_code, 
                  "employee_code": admin_schema.employee_code, 
@@ -249,10 +249,12 @@ async def update_collaborator(company_code: str = Form(...),
 
         collection = db["colaboradores"]
         directory = "./db/" + company_code + "/" + employee_code
+        directory_tmp = directory + "_old"
         
-        # first delete all files. 
-        for f in os.listdir(directory):
-            os.remove(os.path.join(directory, f))
+        # rename directory
+        os.rename(directory, directory_tmp)
+
+        os.mkdir(directory)
 
         # loop through image list and copy to folder, then add path to list.
         image_paths = []
@@ -261,15 +263,27 @@ async def update_collaborator(company_code: str = Form(...),
             with open(image_path,'wb') as image:
                 shutil.copyfileobj(file.file, image)
                 image_paths.append(image_path)
+        
+        # validate fotos
+        req = requests.post('http://app_df:8000/validar_fotos', data = {'company_code': company_code, "employee_code": employee_code})
+        resp = req.json()
+        if not resp["created"]:
+            # the endpoint already deletes the fotos if face detection error occurs
+            # rename old directory to default name
+            print("trying to rename directory")
+            os.rename(directory_tmp, directory)
+            return{"created": False, "code": 4, "status": "face could not be detected"}
 
+        # delete old image directory
+        shutil.rmtree(directory_tmp)
+        
         # find employee and modify relevant data.
         employee = { "employee_code": employee_code }
-        new_path = { "$set": { "image_paths": image_paths , "updated": datetime.datetime.now(), "nombre_completo": nombre_completo} }
+        new_path = { "$set": { "image_paths": image_paths , "updated": datetime.now(timezone('America/Panama')), "nombre_completo": nombre_completo} }
         collection.update_one(employee, new_path)
 
-        # for now we return the mongodb document just for developement purposes.
-        x = collection.find()
-        return(dumps(x))
+
+        return{"created": True, "code": 6, "status": "representations created successfully"}
 
     except Exception as e:
         print(e)
@@ -353,7 +367,7 @@ async def remove_collaborator(employee_code_model: models.employee_code_model):
         # insertar en nueva coleccion
         deleted_collection.insert_one(employee_document)
         # actualizar fecha de actualizacion del colaborador borrado para indicar la fecha en la que fue movido a la nueva coleccion.
-        updated = {"$set": {"updated": datetime.datetime.now()} }
+        updated = {"$set": {"updated": datetime.now(timezone('America/Panama'))} }
         deleted_collection.update_one(employee, updated)
         # borrar de coleccion de colaboradores
         collection.delete_one(employee)
@@ -392,7 +406,7 @@ async def remove_admin(employee_code_model: models.employee_code_model):
         # insertar en nueva coleccion
         deleted_collection.insert_one(employee_document)
         # actualizar fecha de actualizacion del colaborador borrado para indicar la fecha en la que fue movido a la nueva coleccion.
-        updated = {"$set": {"updated": datetime.datetime.now()} }
+        updated = {"$set": {"updated": datetime.now(timezone('America/Panama'))} }
         deleted_collection.update_one(employee, updated)
         # borrar de coleccion de colaboradores
         collection.delete_one(employee)
@@ -477,7 +491,7 @@ async def restore_collaborator(employee_code_model: models.employee_code_model):
         # insertar en nueva coleccion
         collection.insert_one(employee_document)
         # actualizar fecha de actualizacion del colaborador borrado para indicar la fecha en la que fue movido a la nueva coleccion.
-        updated = {"$set": {"updated": datetime.datetime.now()} }
+        updated = {"$set": {"updated": datetime.now(timezone('America/Panama'))} }
         collection.update_one(employee, updated)
         # borrar de coleccion de colaboradores
         deleted_collection.delete_one(employee)
@@ -513,7 +527,7 @@ async def restore_admin(employee_code_model: models.employee_code_model):
         # insertar en nueva coleccion
         collection.insert_one(employee_document)
         # actualizar fecha de actualizacion del colaborador borrado para indicar la fecha en la que fue movido a la nueva coleccion.
-        updated = {"$set": {"updated": datetime.datetime.now()} }
+        updated = {"$set": {"updated": datetime.now(timezone('America/Panama'))} }
         collection.update_one(employee, updated)
         # borrar de coleccion de colaboradores
         deleted_collection.delete_one(employee)
