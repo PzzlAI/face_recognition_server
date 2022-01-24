@@ -156,7 +156,7 @@ async def recognize_person(company_code: str = Form(...), employee_code: str = F
 
                 collaborator = { "employee_code": employee_code}
 
-                tz = timezone('EST')
+                tz = timezone('America/Panama')
                 current_date = datetime.now(tz)
                 marcacion = { "$push": { "marcaciones": {"latitude": latitude, "longitude": longitude, "date": current_date} } }
                 marcaciones.update_one(collaborator, marcacion)
