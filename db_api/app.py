@@ -88,6 +88,64 @@ async def admin_login(admin_credentials: models.admin_credentials):
         return{"access": False, "status": "not found"}
 
 
+@app.post('/admin_update_images')
+async def admin_save_images(company_code: str = Form(...), 
+                            employee_code: str = Form(...),
+                            nombre_completo: str =Form(...),
+                            files: List[UploadFile] = File(...) ):
+    db=""
+    try:
+        db = get_db(company_code)
+
+        if not db:
+            return "company doesnt exist"
+
+        collection = db["administradores"]
+        directory = "./db/" + company_code + "/" + employee_code
+        directory_tmp = directory + "_old"
+        
+        # rename directory
+        os.rename(directory, directory_tmp)
+
+        os.mkdir(directory)
+
+        # loop through image list and copy to folder, then add path to list.
+        image_paths = []
+        for file in files:
+            image_path = directory + "/" + employee_code + "_" + str(len(os.listdir(directory))) + ".jpg"
+            with open(image_path,'wb') as image:
+                shutil.copyfileobj(file.file, image)
+                image_paths.append(image_path)
+        
+        # validate fotos
+        req = requests.post('http://app_df:8000/validar_fotos', data = {'company_code': company_code, "employee_code": employee_code})
+        resp = req.json()
+        if not resp["created"]:
+            # the endpoint already deletes the fotos if face detection error occurs
+            # rename old directory to default name
+            print("trying to rename directory")
+            os.rename(directory_tmp, directory)
+            return{"created": False, "code": 4, "status": "face could not be detected"}
+
+        # delete old image directory
+        shutil.rmtree(directory_tmp)
+        
+        # find employee and modify relevant data.
+        employee = { "employee_code": employee_code }
+        new_path = { "$set": { "image_paths": image_paths , "updated": datetime.now(timezone('America/Panama')), "nombre_completo": nombre_completo} }
+        collection.update_one(employee, new_path)
+
+
+        return{"created": True, "code": 6, "status": "representations created successfully"}
+
+    except Exception as e:
+        print(e)
+    finally:
+        if type(db)==MongoClient:
+            db.close()
+
+
+    
 
 # esta ruta solo se va a usar para pruebas, posteriormente se va a formalizar un proceso de creacion de base de datos utilizando el concepto del omega administrador.
 # por ahora este proceso tambien requiere la creacion del super administrador, pero esto es sujeto a cambio dependiendo de las decisiones de diseño futuras.
@@ -218,13 +276,16 @@ async def create_admin(admin_schema: models.admin_schema):
                  "employee_code": admin_schema.employee_code, 
                  "username": admin_schema.username, 
                  "password": admin_schema.password, 
-                 "nombre_completo": admin_schema.nombre_completo, 
+                 "nombre_completo": admin_schema.nombre_completo,
+                 "image_paths": [],
                  "serial_de_dispositivo": "", 
                  "created": current_date, 
                  "updated": current_date }
 
         print(admin)
         collection.insert_one(admin)
+        os.mkdir("./db/" + admin_schema.company_code + "/" + admin_schema.employee_code)
+
         x = collection.find()
         return(dumps(x))
     except Exception as e:

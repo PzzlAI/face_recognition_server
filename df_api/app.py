@@ -90,6 +90,11 @@ async def recognize_person(company_code: str = Form(...), employee_code: str = F
                 collaborator = { "employee_code": employee_code}
                 x = collection.find_one(collaborator)
 
+                # if its not a colaborator then it must be an administrator. 
+                if not x:
+                    collection = db["administradores"]
+                    x = collection.find_one(collaborator)
+
 
                 return {"access": True, "code": 1, "status": "found, face recognized", "name": x["nombre_completo"]}
             else:
