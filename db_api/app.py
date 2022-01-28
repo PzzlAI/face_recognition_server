@@ -367,7 +367,7 @@ async def read(employee_code_model: models.employee_code_model):
 
         employee = { "employee_code": employee_code_model.employee_code}
         employee_data = collection.find_one(employee)
-        
+
         if not employee_data:
             collection = db["administradores"]
             employee_data = collection.find_one(employee)
@@ -531,6 +531,10 @@ async def delete_admin(employee_code_model: models.employee_code_model):
         employee = { "employee_code": employee_code_model.employee_code }
         
         collection.delete_one(employee)
+        directory = "./db/"+ employee_code_model.company_code + "/" + employee_code_model.employee_code
+        if os.path.isdir(directory):
+            shutil.rmtree(directory)
+
         return("se borro administrador exitosamente")
     except Exception as e:
         print(e)
