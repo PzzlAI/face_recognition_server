@@ -367,6 +367,13 @@ async def read(employee_code_model: models.employee_code_model):
 
         employee = { "employee_code": employee_code_model.employee_code}
         employee_data = collection.find_one(employee)
+        
+        if not employee_data:
+            collection = db["administradores"]
+            employee_data = collection.find_one(employee)
+        
+        if not employee_data:
+            return("employee not found")
 
         image_list = [path for path in employee_data['image_paths']]
         print(image_list)
