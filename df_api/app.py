@@ -7,6 +7,7 @@ import shutil
 from starlette.testclient import TestClient
 from pymongo import MongoClient
 from datetime import datetime
+import time
 from pytz import timezone
 from bson.json_util import dumps
 from pydantic import BaseModel
@@ -35,6 +36,11 @@ def get_db(company_code):
         return db
     else:
         return False
+
+def datetime_from_utc_to_local(utc_datetime):
+    now_timestamp = time.time()
+    offset = datetime.fromtimestamp(now_timestamp) - datetime.utcfromtimestamp(now_timestamp)
+    return utc_datetime + offset
 
 
 @app.get('/')
@@ -161,8 +167,7 @@ async def recognize_person(company_code: str = Form(...), employee_code: str = F
 
                 collaborator = { "employee_code": employee_code}
 
-                tz = timezone('America/Panama')
-                current_date = datetime.now(tz)
+                current_date = datetime.now()
                 print(current_date)
                 marcacion = { "$push": { "marcaciones": {"latitude": latitude, "longitude": longitude, "date": current_date} } }
                 marcaciones.update_one(collaborator, marcacion)
@@ -192,8 +197,12 @@ async def leer_marcaciones(clock_in_list_model: clock_in_list_model):
     lista_marcaciones = []
 
     for i in reversed(x["marcaciones"]):
-        print("latitude: " + str(i["latitude"]) + " longitude: " + str(i["longitude"]) + " date: " + str(i["date"]))
-        item = {"latitude": str(i["latitude"]), "longitude": str(i["longitude"]), "date": str(i["date"]) }
+        # transform mongodb date to utc
+        utc = datetime.strptime(str(i["date"]), '%Y-%m-%dT%H:%M:%S.%fZ')
+        local_date = datetime_from_utc_to_local(utc)
+
+        print("latitude: " + str(i["latitude"]) + " longitude: " + str(i["longitude"]) + " date: " + local_date)
+        item = {"latitude": str(i["latitude"]), "longitude": str(i["longitude"]), "date": local_date }
         print(item)
         lista_marcaciones.append(item)
     print(len(lista_marcaciones))
