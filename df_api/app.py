@@ -37,12 +37,6 @@ def get_db(company_code):
     else:
         return False
 
-def datetime_from_utc_to_local(utc_datetime):
-    now_timestamp = time.time()
-    offset = datetime.fromtimestamp(now_timestamp) - datetime.utcfromtimestamp(now_timestamp)
-    return utc_datetime + offset
-
-
 @app.get('/')
 def ping_server():
     return "DeepFace api is running!"
@@ -198,8 +192,10 @@ async def leer_marcaciones(clock_in_list_model: clock_in_list_model):
 
     for i in reversed(x["marcaciones"]):
         # transform mongodb date to utc
-        utc = datetime.strptime(str(i["date"]), '%Y-%m-%dT%H:%M:%S.%fZ')
-        local_date = datetime_from_utc_to_local(utc)
+        utc = datetime.strptime(str(i["date"]), '%Y-%m-%d %H:%M:%S.%f')
+        # de utc a local del servidor
+        tz = timezone('America/Panama')
+        local_date = utc.astimezone(tz)
 
         print("latitude: " + str(i["latitude"]) + " longitude: " + str(i["longitude"]) + " date: " + str(local_date))
         item = {"latitude": str(i["latitude"]), "longitude": str(i["longitude"]), "date": str(local_date) }
