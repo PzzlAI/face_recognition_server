@@ -201,8 +201,8 @@ async def leer_marcaciones(clock_in_list_model: clock_in_list_model):
         utc = datetime.strptime(str(i["date"]), '%Y-%m-%dT%H:%M:%S.%fZ')
         local_date = datetime_from_utc_to_local(utc)
 
-        print("latitude: " + str(i["latitude"]) + " longitude: " + str(i["longitude"]) + " date: " + local_date)
-        item = {"latitude": str(i["latitude"]), "longitude": str(i["longitude"]), "date": local_date }
+        print("latitude: " + str(i["latitude"]) + " longitude: " + str(i["longitude"]) + " date: " + str(local_date))
+        item = {"latitude": str(i["latitude"]), "longitude": str(i["longitude"]), "date": str(local_date) }
         print(item)
         lista_marcaciones.append(item)
     print(len(lista_marcaciones))
