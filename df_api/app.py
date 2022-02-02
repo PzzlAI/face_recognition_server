@@ -47,6 +47,13 @@ async def recognize_person(company_code: str = Form(...), employee_code: str = F
     if not db:
         return "company doesnt exist"
 
+    collection = db["colaboradores"]
+
+    collaborator = { "employee_code": employee_code}
+    x = collection.find_one(collaborator)
+    if not x:
+        return "collaborator doesnt exist"
+
     
     
     print("recibiendo imagen")
@@ -84,18 +91,65 @@ async def recognize_person(company_code: str = Form(...), employee_code: str = F
         if(not df.empty):
             print(df.head())
             if df['Facenet_cosine'][0] < 0.4:     
+                return {"access": True, "code": 1, "status": "found, face recognized", "name": x["nombre_completo"]}
+            else:
+                return {"access": False, "code": 2, "status": "found, face not recognized", "name": None}
+        else:
+            return {"access": False, "code": 3, "status": "no similar faces found", "name": None}
+        
+    except Exception as e:
+        return(e)
 
-                collection = db["colaboradores"]
+@app.post('/verify_admin')
+async def recognize_person(company_code: str = Form(...), employee_code: str = Form(...), file: UploadFile = File(...)):
+    db = get_db(company_code)
+    if not db:
+        return "company doesnt exist"
 
-                collaborator = { "employee_code": employee_code}
-                x = collection.find_one(collaborator)
+    collection = db["administradores"]
 
-                # if its not a colaborator then it must be an administrator. 
-                if not x:
-                    collection = db["administradores"]
-                    x = collection.find_one(collaborator)
+    collaborator = { "employee_code": employee_code}
+    x = collection.find_one(collaborator)
+    if not x:
+        return "administrator doesnt exist"
+
+    
+    
+    print("recibiendo imagen")
+    image_path = "./db/" + company_code + "/" + employee_code
+
+    if not os.path.isdir(image_path):
+        return "employee doesnt exist"
+
+    # guardar archivo como jpg en tmp folder
+    with open(f"{IMAGEDIR}image.jpg", "wb") as image:
+        shutil.copyfileobj(file.file, image)
+    
+    # encontrar imagenes parecidas en carpeta de imagenes
+    metrics = ["cosine", "euclidean", "euclidean_l2"]
+    models = ["VGG-Face", "Facenet", "Facenet512", "OpenFace", "DeepFace", "DeepID", "ArcFace", "Dlib"]
+    try:
+        df = DeepFace.find(img_path = r"./tmp/image.jpg", db_path = image_path, distance_metric = metrics[0], model_name = models[1])
+    except ValueError as e:
+        if str(e) == "Face could not be detected. Please confirm that the picture is a face photo or consider to set enforce_detection param to False.":
+            return{"access": False, "code": 4, "status": "face could not be detected", "name": None}
 
 
+    # borrar imagenes de tmp folder
+    for filename in os.listdir(IMAGEDIR):
+        file_path = os.path.join(IMAGEDIR, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            print('Failed to delete %s. Reason: %s' % (file_path, e))
+
+    try:
+        if(not df.empty):
+            print(df.head())
+            if df['Facenet_cosine'][0] < 0.4:     
                 return {"access": True, "code": 1, "status": "found, face recognized", "name": x["nombre_completo"]}
             else:
                 return {"access": False, "code": 2, "status": "found, face not recognized", "name": None}
