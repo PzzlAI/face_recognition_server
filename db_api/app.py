@@ -80,7 +80,7 @@ async def admin_login(admin_credentials: models.admin_credentials):
             continue
 
         if x["password"] == admin_credentials.password:
-            return{"access": True, "status": "found, password correct", "name": x["nombre_completo"], "company_code": x["company_code"]}
+            return{"access": True, "status": "found, password correct", "name": x["nombre_completo"], "company_code": x["company_code"], "employee_code": x["employee_code"]}
 
         if x["password"] != admin_credentials.password:
             return{"access": False, "status": "found, password incorrect", "name": x["nombre_completo"]}
