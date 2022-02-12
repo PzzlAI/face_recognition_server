@@ -625,34 +625,6 @@ async def read_employees(company_code: str):
         administrators = db["administradores"].find()
         super_admin = db["super_administrador"].find()
 
-
-        # parsed_list_col = []
-        # parsed_list_adm = []
-        # parsed_list_sup = []
-        # parsed_dict_col = {}
-        # parsed_dict_adm = {}
-        # parsed_dict_sup = {}
-
-        # print(dumps(collaborators))
-        # print(dumps(super_admin))
-
-        # for employee in collaborators:
-        #     print("loop de empleados")
-        #     print(employee)
-        #     parsed_dict_col[employee['employee_code']] = {employee["nombre_completo"], employee["image_paths"]}
-        #     parsed_list_col.append(employee)
-
-        # for employee in administrators:
-        #     parsed_dict_adm[employee['employee_code']] = employee["nombre_completo"]
-        #     parsed_list_adm.append({employee["nombre_completo"]})
-
-        # for employee in super_admin:
-        #     parsed_dict_sup[employee['employee_code']] = employee["nombre_completo"]
-        #     parsed_list_sup.append({employee["nombre_completo"]})
-
-        # print("aqui")
-        # print(parsed_list_col)
-
         return {
             "colaboradores": dumps(collaborators),
             "administradores": dumps(administrators),
