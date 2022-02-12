@@ -10,6 +10,7 @@ click==8.0.3
 colorama==0.4.4
 deepface==0.0.68
 fastapi==0.70.0
+fastapi-utils==0.2.1
 filelock==3.4.0
 Flask==2.0.2
 flatbuffers==2.0

@@ -1,5 +1,5 @@
 import uvicorn
-from fastapi import FastAPI, File, UploadFile, Body, Form
+from fastapi import FastAPI, File, UploadFile, Body, Form, BackgroundTasks
 from typing import Optional
 from deepface import DeepFace
 import os
@@ -10,7 +10,13 @@ from datetime import datetime
 import time
 from pytz import timezone
 from bson.json_util import dumps
+from bson.objectid import ObjectId
 from pydantic import BaseModel
+from fastapi_utils.tasks import repeat_every
+import requests
+import json
+import random
+
 
 class clock_in_list_model(BaseModel):
     company_code: str
@@ -18,24 +24,35 @@ class clock_in_list_model(BaseModel):
     start: int
     amount: Optional[int] = 20
 
+marcaciones_sin_procesar = []
+
 app = FastAPI()
 
-
-IMAGEDIR = "./tmp/"
-
-def get_db(company_code):
-    client = MongoClient(host='test_mongodb',
+client = MongoClient(host='test_mongodb',
                          port=27017, 
                          username='root', 
                          password='pass',
                         authSource="admin")
-                        
+
+
+IMAGEDIR = "./tmp/"
+
+# def connect_to_mongo_client():
+#     client = MongoClient(host='test_mongodb',
+#                          port=27017, 
+#                          username='root', 
+#                          password='pass',
+#                         authSource="admin")
+#     return client
+
+def get_db(company_code):
     dbnames = client.list_database_names()
     if company_code in dbnames:   
         db = client[company_code]
         return db
     else:
         return False
+
 
 @app.get('/')
 def ping_server():
@@ -165,8 +182,83 @@ async def recognize_person(company_code: str = Form(...), employee_code: str = F
     #     if db and type(db)==MongoClient:
     #         db.close()
 
+def process_request_server(marcacion):
+    print("processing punchin")
+    response = requests.post(
+                'http://68.183.20.19/janustime/public/API/aplicacion/checkin2',
+                json =  {
+                        "ID_EMPRESA" : marcacion["ID_EMPRESA"],
+                        "CODIGO_HUELLA" : marcacion["CODIGO_HUELLA"],
+                        "DATETIME" : marcacion["DATETIME"],
+                        "LAT" : marcacion["LAT"],
+                        "LONG" : marcacion["LONG"]
+                        }
+    )
+    print(response)
+    print(response.json())
+    if response.ok:
+        print("processed code: {}, id: {}, date: {}, lat: {}, lon: {}".format(marcacion["ID_EMPRESA"], marcacion["CODIGO_HUELLA"], marcacion["DATETIME"], marcacion["LAT"], marcacion["LONG"]))
+        db = get_db(marcacion["ID_EMPRESA"])
+        marcaciones = db["marcaciones"]
+        collaborator = { "employee_code": marcacion["CODIGO_HUELLA"]}
+        marcacion = { "$push": { "marcaciones": {"latitude": marcacion["LAT"], "longitude": marcacion["LONG"], "date": marcacion["DATETIME"]} } }
+        marcaciones.update_one(collaborator, marcacion)
+    else:
+        print("unable to process, adding to queue")
+        db = client["marcaciones_pendientes"]
+        marcaciones_pendientes = db["marcaciones"]
+        marcaciones_pendientes.insert_one(marcacion)
+
+def process_request_test(marcacion):
+    print("processing punchin")
+    print(marcacion)
+    random_number = random.randint(0, 10)
+    time.sleep(2)
+
+    if random_number > 5:
+        print("processed code:{}, id: {}, date: {}, lat: {}, lon: {}".format(marcacion["ID_EMPRESA"], marcacion["CODIGO_HUELLA"], marcacion["DATETIME"], marcacion["LAT"], marcacion["LONG"]))
+        db = get_db(marcacion["ID_EMPRESA"])
+        marcaciones = db["marcaciones"]
+        collaborator = { "employee_code": marcacion["CODIGO_HUELLA"]}
+        marcacion = { "$push": { "marcaciones": {"latitude": marcacion["LAT"], "longitude": marcacion["LONG"], "date": marcacion["DATETIME"]} } }
+        marcaciones.update_one(collaborator, marcacion)
+    else:
+        print("unable to process, adding to queue")
+        db = client["marcaciones_pendientes"]
+        marcaciones_pendientes = db["marcaciones"]
+        marcaciones_pendientes.insert_one(marcacion)
+
+        
+
+
+
+@app.on_event("startup")
+@repeat_every(seconds = 10 * 60) # every ten minutes
+def reprocess_punchin():
+    try:
+        marcaciones_pendientes_list = []
+
+        db = client["marcaciones_pendientes"]
+        marcaciones_pendientes = db["marcaciones"]
+        
+        marcaciones_pendientes_list = list(marcaciones_pendientes.find())
+        print(marcaciones_pendientes_list)
+
+        if not marcaciones_pendientes_list:
+            print("no pending punchins")
+        else:    
+            print("processing pending punchins")
+            for marcacion in marcaciones_pendientes_list:
+                print(marcacion["_id"])
+                _id = ObjectId(marcacion["_id"])
+                marcaciones_pendientes.delete_one({"_id": _id})
+                process_request_test(marcacion)
+                
+    except Exception as e:
+        print(e)
+
 @app.post('/marcacion')
-async def recognize_person(company_code: str = Form(...), employee_code: str = Form(...), file: UploadFile = File(...), latitude: str = Form(...), longitude: str = Form(...)):
+async def recognize_person(background_tasks: BackgroundTasks, company_code: str = Form(...), employee_code: str = Form(...), file: UploadFile = File(...), latitude: str = Form(...), longitude: str = Form(...)):
     # creo que estas pruebas no se tienen que hacer porque en esta posicion ya se hizo el 
     # login, pero lo voy a dejar por ahora. 
     
@@ -206,28 +298,29 @@ async def recognize_person(company_code: str = Form(...), employee_code: str = F
             print('Failed to delete %s. Reason: %s' % (file_path, e))
 
 
-    try:
-        if(not df.empty):
-            print(df.head())
-            if df['Facenet_cosine'][0] < 0.4:     
 
-                marcaciones = db["marcaciones"]
+    if(not df.empty):
+        print(df.head())
+        if df['Facenet_cosine'][0] < 0.4:     
+            tz = timezone('America/Panama')
+            current_date = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
+            print(current_date)
+            marcacion = {
+                "ID_EMPRESA" : company_code,
+                "CODIGO_HUELLA" : employee_code,
+                "DATETIME" : str(current_date),
+                "LAT" : latitude,
+                "LONG" : longitude
+            }
 
-                collaborator = { "employee_code": employee_code}
+            background_tasks.add_task(process_request_test, marcacion)
 
-                current_date = datetime.now()
-                print(current_date)
-                marcacion = { "$push": { "marcaciones": {"latitude": latitude, "longitude": longitude, "date": current_date} } }
-                marcaciones.update_one(collaborator, marcacion)
-
-                return {"access": True, "code": 1, "status": "found, face recognized"}
-            else:
-                return {"access": False, "code": 2, "status": "found, face not recognized"}
+            return {"access": True, "code": 1, "status": "found, face recognized"}
         else:
-            return {"access": False, "code": 3, "status": "no similar faces found"}
-        
-    except Exception as e:
-        return(e)
+            return {"access": False, "code": 2, "status": "found, face not recognized"}
+    else:
+        return {"access": False, "code": 3, "status": "no similar faces found"}
+
 
 
 @app.post('/leer_marcaciones')
@@ -246,7 +339,8 @@ async def leer_marcaciones(clock_in_list_model: clock_in_list_model):
 
     for i in reversed(x["marcaciones"]):
         # transform mongodb date to utc
-        utc = datetime.strptime(str(i["date"]), '%Y-%m-%d %H:%M:%S.%f')
+        print(str(i["date"]))
+        utc = datetime.strptime(str(i["date"]), '%Y-%m-%d %H:%M:%S')
         # de utc a local del servidor
         tz = timezone('America/Panama')
         local_date = utc.astimezone(tz)
@@ -297,3 +391,4 @@ async def validar_fotos(company_code: str = Form(...), employee_code: str = Form
 if __name__ == '__main__':
     print("running on port 8000")
     uvicorn.run(app, host = '0.0.0.0', port = 8000)
+
