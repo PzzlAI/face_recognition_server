@@ -299,8 +299,7 @@ async def recognize_person(background_tasks: BackgroundTasks, company_code: str 
     if(not df.empty):
         print(df.head())
         if df['Facenet_cosine'][0] < 0.4:     
-            tz = timezone('America/Panama')
-            current_date = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
+            current_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             print(current_date)
             marcacion = {
                 "ID_EMPRESA" : company_code,
