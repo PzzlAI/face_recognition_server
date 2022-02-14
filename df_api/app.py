@@ -228,12 +228,9 @@ def process_request_test(marcacion):
         marcaciones_pendientes = db["marcaciones"]
         marcaciones_pendientes.insert_one(marcacion)
 
-        
-
-
 
 @app.on_event("startup")
-@repeat_every(seconds = 10 * 60) # every ten minutes
+@repeat_every(seconds = 5) # every ten minutes
 def reprocess_punchin():
     try:
         marcaciones_pendientes_list = []
