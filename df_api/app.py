@@ -249,7 +249,7 @@ def reprocess_punchin():
                 print(marcacion["_id"])
                 _id = ObjectId(marcacion["_id"])
                 marcaciones_pendientes.delete_one({"_id": _id})
-                process_request_test(marcacion)
+                process_request_server(marcacion)
                 
     except Exception as e:
         print(e)
@@ -309,7 +309,7 @@ async def recognize_person(background_tasks: BackgroundTasks, company_code: str 
                 "LONG" : longitude
             }
 
-            background_tasks.add_task(process_request_test, marcacion)
+            background_tasks.add_task(process_request_server, marcacion)
 
             return {"access": True, "code": 1, "status": "found, face recognized"}
         else:
