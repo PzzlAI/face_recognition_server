@@ -146,7 +146,6 @@ async def admin_save_images(company_code: str = Form(...),
 
 
     
-
 # esta ruta solo se va a usar para pruebas, posteriormente se va a formalizar un proceso de creacion de base de datos utilizando el concepto del omega administrador.
 # por ahora este proceso tambien requiere la creacion del super administrador, pero esto es sujeto a cambio dependiendo de las decisiones de diseño futuras.
 
@@ -267,8 +266,11 @@ async def create_admin(admin_schema: models.admin_schema):
 
         if not db:
             return "company doesnt exist"
-        
+
         collection = db["administradores"]
+        x = collection.find_one({"employee_code": admin_schema.employee_code})
+        if x:
+            return "admin already exists"
         
         tz = timezone('America/Panama')
         current_date = datetime.now(tz)
@@ -526,7 +528,7 @@ async def delete_admin(employee_code_model: models.employee_code_model):
         if not db:
             return "company doesnt exist"
 
-        collection = db["administrador"]
+        collection = db["administradores"]
 
         employee = { "employee_code": employee_code_model.employee_code }
         
