@@ -80,12 +80,12 @@ async def admin_login(admin_credentials: models.admin_credentials):
             continue
 
         if x["password"] == admin_credentials.password:
-            return{"access": True, "status": "found, password correct", "name": x["nombre_completo"], "company_code": x["company_code"], "employee_code": x["employee_code"]}
+            return{"access": True, "code": 5001, "status": "found, password correct", "name": x["nombre_completo"], "company_code": x["company_code"], "employee_code": x["employee_code"]}
 
         if x["password"] != admin_credentials.password:
-            return{"access": False, "status": "found, password incorrect", "name": x["nombre_completo"]}
+            return{"access": False, "code": 6001, "status": "found, password incorrect", "name": x["nombre_completo"]}
     if not x:
-        return{"access": False, "status": "not found"}
+        return{"access": False, "code": 1004, "status": "not found"}
 
 
 @app.post('/admin_update_images')
@@ -98,7 +98,7 @@ async def admin_save_images(company_code: str = Form(...),
         db = get_db(company_code)
 
         if not db:
-            return "company doesnt exist"
+            return {"code": 1001, "status": "Compañia no existe"}
 
         collection = db["administradores"]
         directory = "./db/" + company_code + "/" + employee_code
@@ -125,7 +125,7 @@ async def admin_save_images(company_code: str = Form(...),
             # rename old directory to default name
             print("trying to rename directory")
             os.rename(directory_tmp, directory)
-            return{"created": False, "code": 4, "status": "face could not be detected"}
+            return{"created": False, "code": 3001, "status": "no se encuentra cara en la foto"}
 
         # delete old image directory
         shutil.rmtree(directory_tmp)
@@ -136,7 +136,7 @@ async def admin_save_images(company_code: str = Form(...),
         collection.update_one(employee, new_path)
 
 
-        return{"created": True, "code": 6, "status": "representations created successfully"}
+        return{"created": True, "code": 4002, "status": "representations created successfully"}
 
     except Exception as e:
         print(e)
@@ -155,6 +155,9 @@ async def create_company(admin_schema: models.admin_schema):
     db=""
     try:
         db = get_db(admin_schema.company_code)
+        if db:
+            return{"code": 2001, "status": "Compañia ya existe"}
+
         if not db:
             os.mkdir("./db/" + admin_schema.company_code)
             db = create_db(admin_schema.company_code)
@@ -174,7 +177,7 @@ async def create_company(admin_schema: models.admin_schema):
                             "updated": current_date }
 
             collection.insert_one(super_admin)
-            return ("company " + admin_schema.company_code + " created succesfully with " + admin_schema.employee_code+ " as administrator")
+            return{"code": 7001, "status": "creado exitosamente"}
 
 
     except Exception as e:
@@ -204,13 +207,13 @@ async def create_collaborator(company_code: str = Form(...),
         db = get_db(company_code)
 
         if not db:
-            return {'status': "company doesnt exist"}
+            return {"code": 1001, 'status': "company doesnt exist"}
         
         directory = "./db/" + company_code + "/" + employee_code
 
         # todo: error handling de cuando ya existe el colaborador. por ahora voy a poner esto, pero hay que ver que es apropiado hacer.
         if os.path.isdir(directory):
-            return {'status': 'collaborator already exists'}
+            return {"code": 2001, 'status': 'collaborator already exists'}
         
         collaborators = db["colaboradores"]
 
@@ -227,7 +230,7 @@ async def create_collaborator(company_code: str = Form(...),
         req = requests.post('http://app_df:8000/validar_fotos', data = {'company_code': company_code, "employee_code": employee_code})
         resp = req.json()
         if not resp["created"]:
-            return{"created": False, "code": 4, "status": "face could not be detected"}
+            return{"created": False, "code": 3001, "status": "no se encuentra cara en una de las fotos"}
 
         tz = timezone('America/Panama')
         current_date = datetime.now(tz)
@@ -247,7 +250,7 @@ async def create_collaborator(company_code: str = Form(...),
         marcaciones = db["marcaciones"]
         marcaciones.insert_one(marcador)
 
-        return{"created": True, "code": 6, "status": "representations created successfully"}
+        return{"created": True, "code": 4002, "status": "representations created successfully"}
     except Exception as e:
         print(e)
         return("error del servidor")
@@ -258,19 +261,22 @@ async def create_collaborator(company_code: str = Form(...),
 # todo: refactorizar para aclarar/robustizar el proceso de autenticacion de administrador, ya sea con hashing o viendo si se usa la misma imagen de la persona, sin embargo, esto tendria implicaciones en
 # la estructura general del prototipo. 
 # tomar en cuenta que se hashea antes de mandar al servidor, osea en el app/browser.
-@app.post("/create_admin", status_code = 201)
+@app.post("/create_admin")
 async def create_admin(admin_schema: models.admin_schema):
     db=""
     try:
         db = get_db(admin_schema.company_code)
 
         if not db:
-            return "company doesnt exist"
+            return{"code": 1001, "status": "Compañia no existe"}
 
         collection = db["administradores"]
         x = collection.find_one({"employee_code": admin_schema.employee_code})
         if x:
-            return "admin already exists"
+            return{"code": 2003, "status": "Administrador ya existe"}
+
+
+        # todo: revisar si el username ya existe
         
         tz = timezone('America/Panama')
         current_date = datetime.now(tz)
@@ -289,7 +295,7 @@ async def create_admin(admin_schema: models.admin_schema):
         os.mkdir("./db/" + admin_schema.company_code + "/" + admin_schema.employee_code)
 
         x = collection.find()
-        return(dumps(x))
+        return{"code": 7001, "status": "creado exitosamente"}
     except Exception as e:
         print(e)
     finally:
@@ -308,7 +314,7 @@ async def update_collaborator(company_code: str = Form(...),
         db = get_db(company_code)
 
         if not db:
-            return "company doesnt exist"
+            return{"code": 1001, "status": "Compañia no existe"}
 
         collection = db["colaboradores"]
         directory = "./db/" + company_code + "/" + employee_code
@@ -335,7 +341,7 @@ async def update_collaborator(company_code: str = Form(...),
             # rename old directory to default name
             print("trying to rename directory")
             os.rename(directory_tmp, directory)
-            return{"created": False, "code": 4, "status": "face could not be detected"}
+            return{"created": False, "code": 3001, "status": "no se encontro cara en una de las fotos"}
 
         # delete old image directory
         shutil.rmtree(directory_tmp)
@@ -346,7 +352,7 @@ async def update_collaborator(company_code: str = Form(...),
         collection.update_one(employee, new_path)
 
 
-        return{"created": True, "code": 6, "status": "representations created successfully"}
+        return{"created": True, "code": 4002, "status": "representations created successfully"}
 
     except Exception as e:
         print(e)
@@ -363,7 +369,7 @@ async def read(employee_code_model: models.employee_code_model):
     try:
         db = get_db(employee_code_model.company_code)
         if not db:
-            return "company doesnt exist"
+            return{"code": 1001, "status": "Compañia no existe"}
         
         collection = db["colaboradores"]
 
@@ -375,7 +381,7 @@ async def read(employee_code_model: models.employee_code_model):
             employee_data = collection.find_one(employee)
         
         if not employee_data:
-            return("employee not found")
+            return{"code": 1005, "status": "empleado no existe"}
 
         image_list = [path for path in employee_data['image_paths']]
         print(image_list)
@@ -397,7 +403,7 @@ async def read(company_code_model: models.company_code_model):
     try:
         db = get_db(company_code_model.company_code)
         if not db:
-            return "company doesnt exist"
+            return{"code": 1001, "status": "Compañia no existe"}
 
         collaborators = db["colaboradores"].find()
 
@@ -425,7 +431,7 @@ async def remove_collaborator(employee_code_model: models.employee_code_model):
         db = get_db(employee_code_model.company_code)
 
         if not db:
-            return "company doesnt exist"
+            return{"code": 1001, "status": "Compañia no existe"}
 
         collection = db["colaboradores"]
         deleted_collection = db["colaboradores_borrados"]
@@ -442,14 +448,13 @@ async def remove_collaborator(employee_code_model: models.employee_code_model):
         # borrar de coleccion de colaboradores
         collection.delete_one(employee)
 
-        try:
-            # mover imagenes a nueva carpeta asumiendo que el directorio nuevo existe. ./db/(company_code)_deleted/(employee_code)
-            shutil.move("./db/"+ employee_code_model.company_code + "/" + employee_code_model.employee_code, "./db/"+ employee_code_model.company_code + "_deleted/" + employee_code_model.employee_code)
-            return "se removio colaborador exitosamente"
-        except OSError as e:
-            return("Error: %s - %s." % (e.filename, e.strerror))
+        # mover imagenes a nueva carpeta asumiendo que el directorio nuevo existe. ./db/(company_code)_deleted/(employee_code)
+        shutil.move("./db/"+ employee_code_model.company_code + "/" + employee_code_model.employee_code, "./db/"+ employee_code_model.company_code + "_deleted/" + employee_code_model.employee_code)
+        
+        return{"code": 7002, "status": "borrado exitosamente"}
     except Exception as e:
         print(e)
+        return{"code": 8002, "status": "error al borrar"}
     finally:
         if type(db)==MongoClient:
             db.close()
@@ -464,7 +469,7 @@ async def remove_admin(employee_code_model: models.employee_code_model):
         db = get_db(employee_code_model.company_code)
 
         if not db:
-            return "company doesnt exist"
+            return{"code": 1001, "status": "Compañia no existe"}
 
         collection = db["administradores"]
         deleted_collection = db["administradores_borrados"]
@@ -480,9 +485,10 @@ async def remove_admin(employee_code_model: models.employee_code_model):
         deleted_collection.update_one(employee, updated)
         # borrar de coleccion de colaboradores
         collection.delete_one(employee)
-        return("se removio administrador existosamente")
+        return{"code": 7002, "status": "se removio exitosamente"}
+
     except Exception as e:
-        print(e)
+        return{"code": 8002, "status": "no se pudo remover"}
     finally:
         if type(db)==MongoClient:
             db.close()
@@ -496,7 +502,7 @@ async def delete_collaborator(employee_code_model: models.employee_code_model):
         db = get_db(employee_code_model.company_code)
 
         if not db:
-            return "company doesnt exist"
+            return{"code": 1001, "status": "Compañia no existe"}
 
         collaborators = db["colaboradores"]
         marcaciones = db["marcaciones"]
@@ -506,13 +512,13 @@ async def delete_collaborator(employee_code_model: models.employee_code_model):
         collaborators.delete_one(employee)
         marcaciones.delete_one(employee)
 
-        try:
-            shutil.rmtree("./db/"+ employee_code_model.company_code + "/" + employee_code_model.employee_code)
-            return "se borro exitosamente"
-        except OSError as e:
-            return("Error: %s - %s." % (e.filename, e.strerror))
+        shutil.rmtree("./db/"+ employee_code_model.company_code + "/" + employee_code_model.employee_code)
+
+        return{"code": 7002, "status": "borrado exitosamente"}
+
     except Exception as e:
         print(e)
+        return{"code": 8002, "status": "error al borrar"}
     finally:
         if type(db)==MongoClient:
             db.close()
@@ -526,7 +532,7 @@ async def delete_admin(employee_code_model: models.employee_code_model):
         db = get_db(employee_code_model.company_code)
 
         if not db:
-            return "company doesnt exist"
+            return{"code": 1001, "status": "Compañia no existe"}
 
         collection = db["administradores"]
 
@@ -537,9 +543,10 @@ async def delete_admin(employee_code_model: models.employee_code_model):
         if os.path.isdir(directory):
             shutil.rmtree(directory)
 
-        return("se borro administrador exitosamente")
+        return{"code": 7002, "status": "borrado exitosamente"}
     except Exception as e:
         print(e)
+        return{"code": 8002, "status": "error al borrar"}
     finally:
         if type(db)==MongoClient:
             db.close()
@@ -553,7 +560,7 @@ async def restore_collaborator(employee_code_model: models.employee_code_model):
         db = get_db(employee_code_model.company_code)
 
         if not db:
-            return "company doesnt exist"
+            return{"code": 1001, "status": "Compañia no existe"}
 
         collection = db["colaboradores"]
         deleted_collection = db["colaboradores_borrados"]
@@ -570,14 +577,15 @@ async def restore_collaborator(employee_code_model: models.employee_code_model):
         # borrar de coleccion de colaboradores
         deleted_collection.delete_one(employee)
 
-        try:
-            # mover imagenes a nueva carpeta asumiendo que el directorio nuevo existe. ./db/(company_code)_deleted/(employee_code)
-            shutil.move("./db/"+ employee_code_model.company_code + "_deleted/" + employee_code_model.employee_code, "./db/"+ employee_code_model.company_code + "/" + employee_code_model.employee_code)
 
-        except OSError as e:
-            return("Error: %s - %s." % (e.filename, e.strerror))
+        # mover imagenes a nueva carpeta asumiendo que el directorio nuevo existe. ./db/(company_code)_deleted/(employee_code)
+        shutil.move("./db/"+ employee_code_model.company_code + "_deleted/" + employee_code_model.employee_code, "./db/"+ employee_code_model.company_code + "/" + employee_code_model.employee_code)
+
+        return{"code": 7001, "status": "restaurado exitosamente"}
+
     except Exception as e:
         print(e)
+        return{"code": 8001, "status": "error al tratar de restaurar"}
     finally:
         if type(db)==MongoClient:
             db.close()
@@ -589,7 +597,7 @@ async def restore_admin(employee_code_model: models.employee_code_model):
         db = get_db(employee_code_model.company_code)
 
         if not db:
-            return "company doesnt exist"
+            return{"code": 1001, "status": "Compañia no existe"}
 
         collection = db["colaboradores"]
         deleted_collection = db["colaboradores_borrados"]
@@ -606,8 +614,10 @@ async def restore_admin(employee_code_model: models.employee_code_model):
         # borrar de coleccion de colaboradores
         deleted_collection.delete_one(employee)
 
+        return{"code": 7001, "status": "restaurado exitosamente"}
     except Exception as e:
         print(e)
+        return{"code": 8001, "status": "error al tratar de restaurar"}
     finally:
         if type(db)==MongoClient:
             db.close()

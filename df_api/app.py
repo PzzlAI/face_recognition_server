@@ -62,22 +62,22 @@ def ping_server():
 async def recognize_person(company_code: str = Form(...), employee_code: str = Form(...), file: UploadFile = File(...)):
     db = get_db(company_code)
     if not db:
-        return "company doesnt exist"
+        return{"code": 1001, "status": "compañia no existe"}
 
     collection = db["colaboradores"]
 
     collaborator = { "employee_code": employee_code}
     x = collection.find_one(collaborator)
     if not x:
-        return "collaborator doesnt exist"
+        return{"access": False, "code": 1002, "status": "colaborador no existe"}
 
     
     
     print("recibiendo imagen")
     image_path = "./db/" + company_code + "/" + employee_code
 
-    if not os.path.isdir(image_path):
-        return "employee doesnt exist"
+    # if not os.path.isdir(image_path):
+    #     return "employee doesnt exist"
 
     # guardar archivo como jpg en tmp folder
     with open(f"{IMAGEDIR}image.jpg", "wb") as image:
@@ -90,7 +90,7 @@ async def recognize_person(company_code: str = Form(...), employee_code: str = F
         df = DeepFace.find(img_path = r"./tmp/image.jpg", db_path = image_path, distance_metric = metrics[0], model_name = models[1])
     except ValueError as e:
         if str(e) == "Face could not be detected. Please confirm that the picture is a face photo or consider to set enforce_detection param to False.":
-            return{"access": False, "code": 4, "status": "face could not be detected", "name": None}
+            return{"access": False, "code": 3001, "status": "face could not be detected", "name": None}
 
 
     # borrar imagenes de tmp folder
@@ -108,35 +108,36 @@ async def recognize_person(company_code: str = Form(...), employee_code: str = F
         if(not df.empty):
             print(df.head())
             if df['Facenet_cosine'][0] < 0.4:     
-                return {"access": True, "code": 1, "status": "found, face recognized", "name": x["nombre_completo"]}
+                return {"access": True, "code": 4001, "status": "found, face recognized", "name": x["nombre_completo"]}
             else:
-                return {"access": False, "code": 2, "status": "found, face not recognized", "name": None}
+                return {"access": False, "code": 3002, "status": "found, face not recognized", "name": None}
         else:
-            return {"access": False, "code": 3, "status": "no similar faces found", "name": None}
+            return {"access": False, "code": 3002, "status": "no similar faces found", "name": None}
         
     except Exception as e:
-        return(e)
+        print(e)
+        return{"access": False, "code": 8003, "status": e, "name": None}
 
 @app.post('/verify_admin')
 async def recognize_person(company_code: str = Form(...), employee_code: str = Form(...), file: UploadFile = File(...)):
     db = get_db(company_code)
     if not db:
-        return "company doesnt exist"
+        return{"code": 1001, "status": "compañia no existe"}
 
     collection = db["administradores"]
 
     collaborator = { "employee_code": employee_code}
     x = collection.find_one(collaborator)
     if not x:
-        return "administrator doesnt exist"
+        return{"code": 1003, "status": "administrador no existe"}
 
     
     
     print("recibiendo imagen")
     image_path = "./db/" + company_code + "/" + employee_code
 
-    if not os.path.isdir(image_path):
-        return "employee doesnt exist"
+    # if not os.path.isdir(image_path):
+    #     return "employee doesnt exist"
 
     # guardar archivo como jpg en tmp folder
     with open(f"{IMAGEDIR}image.jpg", "wb") as image:
@@ -149,7 +150,7 @@ async def recognize_person(company_code: str = Form(...), employee_code: str = F
         df = DeepFace.find(img_path = r"./tmp/image.jpg", db_path = image_path, distance_metric = metrics[0], model_name = models[1])
     except ValueError as e:
         if str(e) == "Face could not be detected. Please confirm that the picture is a face photo or consider to set enforce_detection param to False.":
-            return{"access": False, "code": 4, "status": "face could not be detected", "name": None}
+            return{"access": False, "code": 3001, "status": "face could not be detected", "name": None}
 
 
     # borrar imagenes de tmp folder
@@ -167,14 +168,16 @@ async def recognize_person(company_code: str = Form(...), employee_code: str = F
         if(not df.empty):
             print(df.head())
             if df['Facenet_cosine'][0] < 0.4:     
-                return {"access": True, "code": 1, "status": "found, face recognized", "name": x["nombre_completo"]}
+                return {"access": True, "code": 4001, "status": "found, face recognized", "name": x["nombre_completo"]}
             else:
-                return {"access": False, "code": 2, "status": "found, face not recognized", "name": None}
+                return {"access": False, "code": 3002, "status": "found, face not recognized", "name": None}
         else:
-            return {"access": False, "code": 3, "status": "no similar faces found", "name": None}
+            return {"access": False, "code": 3002, "status": "no similar faces found", "name": None}
         
     except Exception as e:
-        return(e)
+        print(e)
+        return{"access": False, "code": 8003, "status": e, "name": None}
+
 
 
 
@@ -261,13 +264,13 @@ async def recognize_person(background_tasks: BackgroundTasks, company_code: str 
     
     db = get_db(company_code)
     if not db:
-        return "company doesnt exist"
+        return{"code": 1001, "status": "compañia no existe"}
     
     print("recibiendo imagen")
     image_path = "./db/" + company_code + "/" + employee_code
 
     if not os.path.isdir(image_path):
-        return "employee doesnt exist"
+        return{"code": 1002, "status": "colaborador no existe"}
 
     # guardar archivo como jpg en tmp folder
     with open(f"{IMAGEDIR}image.jpg", "wb") as image:
@@ -281,7 +284,7 @@ async def recognize_person(background_tasks: BackgroundTasks, company_code: str 
         df = DeepFace.find(img_path = r"./tmp/image.jpg", db_path = image_path, distance_metric = metrics[0], model_name = models[1])
     except ValueError as e:
         if str(e) == "Face could not be detected. Please confirm that the picture is a face photo or consider to set enforce_detection param to False.":
-            return{"access": False, "code": 4, "status": "face could not be detected", "name": None}
+            return{"access": False, "code": 3001, "status": "face could not be detected", "name": None}
 
     # borrar imagenes de tmp folder
     for filename in os.listdir(IMAGEDIR):
@@ -311,11 +314,11 @@ async def recognize_person(background_tasks: BackgroundTasks, company_code: str 
 
             background_tasks.add_task(process_request_server, marcacion)
 
-            return {"access": True, "code": 1, "status": "found, face recognized"}
+            return {"access": True, "code": 4001, "status": "found, face recognized"}
         else:
-            return {"access": False, "code": 2, "status": "found, face not recognized"}
+            return {"access": False, "code": 3002, "status": "found, face not recognized"}
     else:
-        return {"access": False, "code": 3, "status": "no similar faces found"}
+        return {"access": False, "code": 3002, "status": "no similar faces found"}
 
 
 
@@ -359,7 +362,7 @@ async def validar_fotos(company_code: str = Form(...), employee_code: str = Form
     directory = "./db/" + company_code + "/" + employee_code
     
     if not os.path.isdir(directory):
-        return{"code": 5, "status": "directory doesnt exist"}
+        return{"code": 1005, "status": "directorio no existe"}
 
     img_path = os.path.join(directory, os.listdir(directory)[0])
     print(directory)
@@ -378,9 +381,9 @@ async def validar_fotos(company_code: str = Form(...), employee_code: str = Form
             print("face not detected")
             shutil.rmtree(directory)
 
-            return{"created": False, "code": 4, "status": "face could not be detected"}
+            return{"created": False, "code": 3001, "status": "face could not be detected"}
     
-    return{"created": True, "code": 6, "status": "representations created successfully"}
+    return{"created": True, "code": 4002, "status": "representations created successfully"}
 
 
 # iniciar servidor
