@@ -187,12 +187,16 @@ async def recognize_person(company_code: str = Form(...), employee_code: str = F
 
 def process_request_server(marcacion):
     print("processing punchin")
+    utc = datetime.strptime(str(marcacion["DATETIME"]), '%Y-%m-%d %H:%M:%S')
+    # de utc a local del servidor
+    tz = timezone('America/Panama')
+    local_date = utc.astimezone(tz)
     response = requests.post(
                 'http://68.183.20.19/janustime/public/API/aplicacion/checkin2',
                 json =  {
                         "ID_EMPRESA" : marcacion["ID_EMPRESA"],
                         "CODIGO_HUELLA" : marcacion["CODIGO_HUELLA"],
-                        "DATETIME" : marcacion["DATETIME"],
+                        "DATETIME" : str(local_date),
                         "LAT" : marcacion["LAT"],
                         "LONG" : marcacion["LONG"]
                         }
@@ -200,7 +204,7 @@ def process_request_server(marcacion):
     print(response)
     print(response.json())
     if response.ok:
-        print("processed code: {}, id: {}, date: {}, lat: {}, lon: {}".format(marcacion["ID_EMPRESA"], marcacion["CODIGO_HUELLA"], marcacion["DATETIME"], marcacion["LAT"], marcacion["LONG"]))
+        print("processed code: {}, id: {}, date: {}, lat: {}, lon: {}".format(marcacion["ID_EMPRESA"], marcacion["CODIGO_HUELLA"], local_date, marcacion["LAT"], marcacion["LONG"]))
         db = get_db(marcacion["ID_EMPRESA"])
         marcaciones = db["marcaciones"]
         collaborator = { "employee_code": marcacion["CODIGO_HUELLA"]}
