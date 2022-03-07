@@ -237,7 +237,7 @@ def process_request_test(marcacion):
 
 
 @app.on_event("startup")
-@repeat_every(seconds = 5) # every ten minutes
+@repeat_every(seconds = 60 * 10) # every ten minutes
 def reprocess_punchin():
     try:
         marcaciones_pendientes_list = []
@@ -337,6 +337,8 @@ async def leer_marcaciones(clock_in_list_model: clock_in_list_model):
     # por el momento lo mas facil es traer la lista completa a scope y luego hacer los procesos de reversa y slice.
     # esto en realidad es malo, porque en teoria solo hay que traer de mongodb los valores que queremos, pero esta resultando
     # dificil traducir del api de mongodb al api de pymongo. sobretodo con aggregate y project etc. asi que lo arreglare despues.
+
+    # db.marcaciones.find({"employee_code": "2"}, {"marcaciones": { $slice: 20}, "_id": 0, "company_code": 0, "employee_code": 0}).pretty()
 
     lista_marcaciones = []
 
