@@ -1,5 +1,5 @@
 from typing import Optional, List
-from fastapi import FastAPI, File, UploadFile,Form
+from fastapi import FastAPI, File, UploadFile,Form, Depends
 import pymongo
 from pymongo import MongoClient
 import uvicorn
@@ -13,21 +13,19 @@ import utils.models as models
 import utils.auxiliary_functions as auxiliary_functions
 import requests
 
-app = FastAPI()
+app = FastAPI(dependencies=[Depends(auxiliary_functions.get_api_key)])
 # todo: posiblemente refactorizar los procesos de remove y restore, pueden ser juntados en una sola ruta respectivamente.
 #       solo que habra que tomar en cuenta la autenticacion en el proceso de remove/restore de admins, ya que solo el super admin
 #       debe ser capaz de hacerlo.
 
-
-
-# todo: hay que setear para que el omega administrador sea el que cree las bases de datos, y hay que definir como va a ser ese proceso.
-def get_db(company_code):
-    client = MongoClient(host='test_mongodb',
+client = MongoClient(host='test_mongodb',
                          port=27017, 
                          username='root', 
                          password='pass',
                         authSource="admin")
-                        
+
+# todo: hay que setear para que el omega administrador sea el que cree las bases de datos, y hay que definir como va a ser ese proceso.
+def get_db(company_code):               
     dbnames = client.list_database_names()
     if company_code in dbnames:   
         db = client[company_code]
@@ -37,16 +35,22 @@ def get_db(company_code):
 
 # por ahora se va a utilizar esta funcion para hacer bases de datos de prueba, pero se va a tener que refactorizar para que se haga a traves del omega administrador.
 def create_db(company_code):
-    client = MongoClient(host='test_mongodb',
-                         port=27017, 
-                         username='root', 
-                         password='pass',
-                        authSource="admin")
     print(company_code)
     db = client[company_code]
     return db
 
-
+def validate_unique(username: str):
+    dbnames = client.list_database_names()
+    administrator = { "username": username}
+    for company_code in dbnames:
+        db = client[company_code]
+        sa_collection = db["super_administrador"]
+        a_collection = db["administradores"]
+        super_admin = sa_collection.find_one(administrator)
+        admin = a_collection.find_one(administrator)
+        if super_admin or admin:
+            return False
+    return True
 
 @app.get('/')
 def ping_server():
@@ -58,12 +62,6 @@ async def admin_login(admin_credentials: models.admin_credentials):
     # revisar si esta en la base de datos
     # primero buscar username, y luego comparas contraseña
     print(admin_credentials)
-
-    client = MongoClient(host='test_mongodb',
-                         port=27017, 
-                         username='root', 
-                         password='pass',
-                        authSource="admin")
 
     dbnames = client.list_database_names()
     print(dbnames)
@@ -118,7 +116,7 @@ async def admin_save_images(company_code: str = Form(...),
                 image_paths.append(image_path)
         
         # validate fotos
-        req = requests.post('http://app_df:8000/validar_fotos', data = {'company_code': company_code, "employee_code": employee_code})
+        req = requests.post('http://app_df:8000/validar_fotos', data = {'company_code': company_code, "employee_code": employee_code}, headers = {os.environ['API_KEY_NAME']: os.environ['API_KEY']})
         resp = req.json()
         if not resp["created"]:
             # the endpoint already deletes the fotos if face detection error occurs
@@ -157,6 +155,9 @@ async def create_company(admin_schema: models.admin_schema):
         db = get_db(admin_schema.company_code)
         if db:
             return{"code": 2001, "status": "Compañia ya existe"}
+
+        if not validate_unique(admin_schema.username):
+            return{"code": 2004, "status": "usuario ya existe"}
 
         if not db:
             os.mkdir("./db/" + admin_schema.company_code)
@@ -227,7 +228,7 @@ async def create_collaborator(company_code: str = Form(...),
                 image_paths.append(image_path)
                 
         # validate fotos
-        req = requests.post('http://app_df:8000/validar_fotos', data = {'company_code': company_code, "employee_code": employee_code})
+        req = requests.post('http://app_df:8000/validar_fotos', data = {'company_code': company_code, "employee_code": employee_code}, headers = {os.environ['API_KEY_NAME']: os.environ['API_KEY']})
         resp = req.json()
         if not resp["created"]:
             return{"created": False, "code": 3001, "status": "no se encuentra cara en una de las fotos"}
@@ -269,6 +270,9 @@ async def create_admin(admin_schema: models.admin_schema):
 
         if not db:
             return{"code": 1001, "status": "Compañia no existe"}
+
+        if not validate_unique(admin_schema.username):
+            return{"code": 2004, "status": "usuario ya existe"}
 
         collection = db["administradores"]
         x = collection.find_one({"employee_code": admin_schema.employee_code})
@@ -334,7 +338,7 @@ async def update_collaborator(company_code: str = Form(...),
                 image_paths.append(image_path)
         
         # validate fotos
-        req = requests.post('http://app_df:8000/validar_fotos', data = {'company_code': company_code, "employee_code": employee_code})
+        req = requests.post('http://app_df:8000/validar_fotos', data = {'company_code': company_code, "employee_code": employee_code}, headers = {os.environ['API_KEY_NAME']: os.environ['API_KEY']})
         resp = req.json()
         if not resp["created"]:
             # the endpoint already deletes the fotos if face detection error occurs
@@ -657,12 +661,6 @@ async def read_employees(company_code: str):
 async def delete_all():
     db=""
     try:
-        client = MongoClient(host='test_mongodb',
-                         port=27017, 
-                         username='root', 
-                         password='pass',
-                        authSource="admin")
-
         dbnames = client.list_database_names()
 
         if dbnames:
@@ -683,11 +681,6 @@ async def delete_all():
 async def list_databases():
     db=""
     try:
-        client = MongoClient(host='test_mongodb',
-                         port=27017, 
-                         username='root', 
-                         password='pass',
-                        authSource="admin")
 
         dbnames = client.list_database_names()
         print(dbnames)

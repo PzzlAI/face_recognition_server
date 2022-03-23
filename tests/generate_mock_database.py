@@ -45,7 +45,7 @@ def generate_mock_administrators(endpoint: str, amount: int, company_count: int)
 def generate_mock_collaborators(endpoint: str, amount: int, company_count: int):
 
     global counter
-    people_folder = r'C:/Users/ratatosck/Desktop/pythonScripts/Deepface_benchmark/lfw_test_dataset/'
+    people_folder = r'D:/pythonScripts/Deepface_benchmark/lfw_test_dataset/'
 
     
 
@@ -79,8 +79,8 @@ if __name__ == "__main__":
     company_count = 3
     collaborator_count = 3
     admin_count = 3
-    #ip = '198.199.82.209'
-    ip = 'localhost'
+    ip = '198.199.82.209'
+    #ip = 'localhost'
     generate_mock_companies(endpoint = 'http://' + ip +':5000/create_company', company_count = company_count)
     generate_mock_collaborators(endpoint = 'http://' + ip +':5000/create_collaborator', amount = collaborator_count, company_count = company_count)
     generate_mock_administrators(endpoint = 'http://' + ip +':5000/create_admin', amount = admin_count, company_count = company_count)

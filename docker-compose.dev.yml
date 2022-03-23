@@ -10,6 +10,9 @@ services:
       - ./db_api:/app
     links:
       - db
+    environment:
+      - API_KEY=dW4gY2hpc3Rl
+      - API_KEY_NAME=key
   app_df:
     build: ./df_api
     command: python -u app.py
@@ -19,6 +22,9 @@ services:
       - ./df_api:/app
     links:
       - db
+    environment:
+      - API_KEY=dW4gY2hpc3Rl
+      - API_KEY_NAME=key
   db:
     image: mongo:latest
     hostname: test_mongodb

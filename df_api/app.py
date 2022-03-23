@@ -1,5 +1,5 @@
 import uvicorn
-from fastapi import FastAPI, File, UploadFile, Body, Form, BackgroundTasks
+from fastapi import FastAPI, File, UploadFile, Body, Form, BackgroundTasks, Depends
 from typing import Optional
 from deepface import DeepFace
 import os
@@ -16,6 +16,7 @@ from fastapi_utils.tasks import repeat_every
 import requests
 import json
 import random
+import utils.auxiliary_functions as auxiliary_functions
 
 
 class clock_in_list_model(BaseModel):
@@ -26,7 +27,7 @@ class clock_in_list_model(BaseModel):
 
 marcaciones_sin_procesar = []
 
-app = FastAPI()
+app = FastAPI(dependencies=[Depends(auxiliary_functions.get_api_key)])
 
 client = MongoClient(host='test_mongodb',
                          port=27017, 
