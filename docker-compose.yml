@@ -13,6 +13,9 @@ services:
     environment:
       - API_KEY=dW4gY2hpc3Rl
       - API_KEY_NAME=key
+    networks:
+      - backend-network
+
   app_df:
     build: ./df_api
     command: python -u app.py
@@ -25,6 +28,7 @@ services:
     environment:
       - API_KEY=dW4gY2hpc3Rl
       - API_KEY_NAME=key
+
   db:
     image: mongo:latest
     hostname: test_mongodb
@@ -36,6 +40,23 @@ services:
       - mongodbdata:/data/db
     ports:
       - 27017:27017
+
+  admin_ui_app:
+    container_name: admin_ui
+    build:
+      context: admin_ui
+      dockerfile: Dockerfile
+    ports:
+      - "5001:4000"
+    networks:
+      - backend-network
+    depends_on:
+      - app_db
+
 volumes:
   app_db:
   mongodbdata:
+
+networks:
+  backend-network:
+    driver: bridge
