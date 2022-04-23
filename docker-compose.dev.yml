@@ -36,3 +36,12 @@ services:
       - mongodbdata:/data/db
     ports:
       - 27017:27017
+
+  admin_ui:
+    build: ./admin_ui
+    command: node app.js
+    ports:
+      - "5001:4000"
+    volumes:
+      - ./admin_ui:/app
+      - /app/node_modules
