@@ -1,0 +1,50 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body{
+    min-height: 100vh;
+    background-color: #fff;
+}
+
+.navbar{
+    width: 250px;
+    height: 160vh;
+    position: fixed;
+    margin-left: -300px;
+    transition: 0.4s;
+}
+.nav-link{
+    font-size: 1.25em;
+}
+.nav-link:active,.nav-link:focus,.nav-link:hover{
+    background-color: #ffffff26;
+}
+.my-contianer{
+    transition: 0.4s; 
+}
+
+/* for navbar */
+.active-nav{
+    margin-left: 0;
+}
+/* for main section */
+.active-cont{
+    margin-left: 300px;
+}
+#menu-btn{
+    color: white;
+}
+
+#menu-btn:focus{
+    box-shadow: 0 0 0 0.25em rgb(198, 198, 198);
+}
+#logo{
+    height: auto;
+    width: 18em;
+}
+
+#menu-space,body{
+    background-color: rgb(229, 238, 241);
+}
