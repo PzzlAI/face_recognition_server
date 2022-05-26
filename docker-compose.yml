@@ -15,6 +15,7 @@ services:
       - API_KEY_NAME=key
     networks:
       - backend-network
+      - db-network
 
   app_df:
     build: ./df_api
@@ -40,6 +41,8 @@ services:
       - mongodbdata:/data/db
     ports:
       - 27017:27017
+    networks:
+      - db-network
 
   admin_ui_app:
     container_name: admin_ui
@@ -59,4 +62,6 @@ volumes:
 
 networks:
   backend-network:
+    driver: bridge
+  db-network:
     driver: bridge
