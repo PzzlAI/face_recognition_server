@@ -426,6 +426,31 @@ async def read(company_code_model: models.company_code_model):
         if type(db)==MongoClient:
             db.close()
 
+@app.post("/read_administrators") # response_model = models.collaborator_list_return
+async def read(company_code_model: models.company_code_model):
+    db=""
+    try:
+        db = get_db(company_code_model.company_code)
+        if not db:
+            return{"code": 1001, "status": "Compañia no existe"}
+
+        administrators = db["administradores"].find()
+
+        parsed_list = {}
+
+        for administrator in administrators:
+            parsed_list[administrator['employee_code']] = administrator["nombre_completo"]
+
+        print(parsed_list)
+
+        return(parsed_list)
+
+    except Exception as e:
+        print(e)
+    finally:
+        if type(db)==MongoClient:
+            db.close()
+
 # mover colaboradores a coleccion y directorio separado, aka, papelera de reciclaje.
 @app.delete("/remove_collaborator", status_code=200)
 async def remove_collaborator(employee_code_model: models.employee_code_model):
