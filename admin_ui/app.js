@@ -15,7 +15,6 @@ app.listen(3000,()=>{
 // public files
 app.use(express.static('public'))
 
-<<<<<<< HEAD
 // logger middleware
 app.use(morgan('dev'));
 
@@ -42,13 +41,3 @@ app.get('/admin-list',(req,res)=>{
 app.use((req, res) => {
   res.status(404).send('404');
 });
-=======
-//pagina principal
-app.get('/', (req, res) => {
-  res.sendFile(__dirname + "/views/dashboard-pagina-principal.html")
-})
-
-app.listen(4000, () => {
-  console.log('listening for requests on port 4000')
-})
->>>>>>> 05dd7189b8991f3e626a900eac0e10cdeacfeee7
