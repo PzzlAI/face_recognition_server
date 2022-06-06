@@ -11,31 +11,7 @@
 </head>
 <body>
     <!-- Sidebar -->
-    <nav class="navbar navbar-expand d-flex flex-column aling-item-start bg-primary" id="sidebar">
-        <a href="#" class="navbar-brand text-light mt-5">
-            <div class="display-5 font-weight-bold"> <i class="bi bi-graph-down" style="font-size: 10rem; color: white;"></i> </div>
-        </a>
-        <ul class="navbar-nav d-flex flex-column mt-5 w-100">
-            <li class="nav-item w-100 pb-3">
-                <a href="./dashboard-pagina-principal.html" class="nav-link text-light">Pagina Principal</a>
-            </li>
-            <li class="nav-item w-100 pb-3">
-                <a href="./dashboard-crear-admin.html" class="nav-link text-light">Crear Adiministradores</a>
-            </li>
-            <li class="nav-item w-100 pb-3">
-                <a href="#" class="nav-link text-light">Lista de Administradores</a>
-            </li>
-            <li class="nav-item w-100 pb-3">
-                <a href="#" class="nav-link text-light">Lista de Colaboradores</a>
-            </li>
-            <li class="nav-item w-100 pb-3">
-                <a href="#" class="nav-link text-light">Analitica</a>
-            </li>
-            <li class="nav-item w-100 pb-3">
-                <a href="#" class="nav-link text-light">Logout</a>
-            </li>
-        </ul>
-    </nav>
+    <%- include('./partials/sidebar.ejs') %> 
     <!-- Content -->
     <section class="p-4 my-container">
         <div class="sticky-top">
