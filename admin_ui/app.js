@@ -10,7 +10,7 @@ const app = express();
 app.set('view engine','ejs');
 
 // listening on port
-app.listen(4000,()=>{
+app.listen(3000,()=>{
   console.log("Express server listening on port 3000");
 });
 
