@@ -411,10 +411,15 @@ async def read(company_code_model: models.company_code_model):
 
         collaborators = db["colaboradores"].find()
 
-        parsed_list = {}
+        parsed_list = []
 
         for collaborator in collaborators:
-            parsed_list[collaborator['employee_code']] = collaborator["nombre_completo"]
+
+            colab = {
+               "employee_code": collaborator['employee_code'],
+               "nombre_completo": collaborator["nombre_completo"] 
+            }
+            parsed_list.append(colab)
 
         print(parsed_list)
 
@@ -436,10 +441,14 @@ async def read(company_code_model: models.company_code_model):
 
         administrators = db["administradores"].find()
 
-        parsed_list = {}
+        parsed_list = []
 
         for administrator in administrators:
-            parsed_list[administrator['employee_code']] = administrator["nombre_completo"]
+            admin = {
+                    "employee_code": administrator['employee_code'],
+                    "nombre_completo": administrator["nombre_completo"]
+                    }
+            parsed_list.append(admin)
 
         print(parsed_list)
 
