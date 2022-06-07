@@ -3,16 +3,20 @@ nuevo repositorio para projectos de puzzleai
 ```bash
 Folder Structure
 +---admin_ui
+|   +---controller
+|   +---public
+|   |   +---css
+|   |   +---img
+|   |   \---js
+|   +---routes
 |   \---views
-|       +---css
-|       +---img
-|       \---js
+|       \---partials
 +---db_api
 |   \---utils
-+---db_api_test
 +---df_api
 |   \---utils
 |       \---__pycache__
 \---tests
+
 
 ```
