@@ -7,7 +7,9 @@ COPY package.json package-lock.json ./
 
 RUN npm install
 
-EXPOSE 3000
 # required for docker desktop port mapping
+COPY . .
+
+EXPOSE 3000
 
 CMD ["node", "app.js"]

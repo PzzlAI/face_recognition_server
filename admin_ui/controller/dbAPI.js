@@ -18,7 +18,7 @@ const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch
 
 const password = 'dW4gY2hpc3Rl';
 const port = '5000';
-const domain = "localhost";
+const domain = "app_db";
 
 
 async function getData(url = '', data = {}) {
@@ -37,13 +37,32 @@ async function getData(url = '', data = {}) {
   }
 
 // Request
-const  adminlist = (data) => {
-  url=`http://${domain}:${port}/read_administrators`
-  const res = getData(url,data )
+const  getAdmin = (data) => {
+  url=`http://${domain}:${port}/read_administrators`;
+  const response = getData(url,data )
   .then(result => {
     // console.log(res); // JSON data parsed by `data.json()` call
     return result;
   });
-  return res;
+  return response;
 }
- module.exports = {adminlist};
+
+const createAdmin = (data) =>{
+  url=`http://${domain}:${port}/create_admin`;
+  data =  
+    {
+      "username": data.UserName,
+      "password": data.UserPass,
+      "company_code": 29, //ver como hacer esto dinamico
+      "employee_code":data.employee_code , // asignarle uno generado.
+      "nombre_completo":`${data.UserName} ${data.UserLastName}`
+    }
+  const response = getData(url,data)
+  .then(result => {
+    // console.log(res); // JSON data parsed by `data.json()` call
+    return result;
+  });
+  return response;
+}
+
+ module.exports = {getAdmin,createAdmin};

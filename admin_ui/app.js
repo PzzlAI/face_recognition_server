@@ -1,4 +1,3 @@
-const { json } = require('express');
 const express = require('express');
 const morgan = require('morgan');
 const apis = require('./controller/dbAPI');
@@ -15,8 +14,8 @@ app.listen(3000,()=>{
 });
 
 // public files
-app.use(express.static('public'))
-
+app.use(express.static('public'));
+app.use(express.urlencoded({extended:true}));
 // logger middleware
 app.use(morgan('dev'));
 
@@ -33,14 +32,19 @@ app.get('/dashboard',(req,res)=>{
 });
 
 app.get('/crear-admin',(req,res)=>{
-  res.render('dashboard-crear-admin');
+  const response = '';
+  res.render('dashboard-crear-admin',{response});
 });
+
+app.post('/crear-admin', async(req,res)=>{
+  console.log(req.body);
+  const response = await apis.createAdmin(req.body);
+  res.render('dashboard-crear-admin',{response});
+});
+
 app.get('/admin-list', async(req,res)=>{
-  const result = await apis.adminlist({"company_code": "29"}); // pensar en como hacer la busqueda dinamica para cada respectiva compañia
-  console.log(result);
-  const data =  JSON.stringify(result);
-  console.log(typeof	data);
-  res.render('adminList',{data});
+  const result = await apis.getAdmin({"company_code": "29"}); // pensar en como hacer la busqueda dinamica para cada respectiva compañia
+  res.render('adminList',{result});
 
 });
 
