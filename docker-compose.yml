@@ -50,7 +50,7 @@ services:
       context: admin_ui
       dockerfile: Dockerfile
     ports:
-      - "5001:4000"
+      - "5001:3000"
     networks:
       - backend-network
     depends_on:
