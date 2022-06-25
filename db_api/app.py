@@ -85,6 +85,33 @@ async def admin_login(admin_credentials: models.admin_credentials):
     if not x:
         return{"access": False, "code": 1004, "status": "not found"}
 
+@app.post('/superadmin_login')
+async def superadmin_login(admin_credentials: models.admin_credentials):
+    # revisar si esta en la base de datos
+    # primero buscar username, y luego comparas contraseña
+    print(admin_credentials)
+
+    dbnames = client.list_database_names()
+    print(dbnames)
+    administrator = { "username": admin_credentials.username}
+
+    for company_code in dbnames:
+        print(company_code)
+        db = client[company_code]
+        collection = db["super_administrador"]
+
+        x = collection.find_one(administrator)
+
+        if not x:
+            continue
+
+        if x["password"] == admin_credentials.password:
+            return{"access": True, "code": 5001, "status": "found, password correct", "name": x["nombre_completo"], "company_code": x["company_code"], "employee_code": x["employee_code"]}
+
+        if x["password"] != admin_credentials.password:
+            return{"access": False, "code": 6001, "status": "found, password incorrect", "name": x["nombre_completo"]}
+    if not x:
+        return{"access": False, "code": 1004, "status": "not found"}
 
 @app.post('/admin_update_images')
 async def admin_save_images(company_code: str = Form(...), 
