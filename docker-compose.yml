@@ -29,6 +29,8 @@ services:
     environment:
       - API_KEY=dW4gY2hpc3Rl
       - API_KEY_NAME=key
+    networks:
+      - backend-network
 
   db:
     image: mongo:latest

@@ -1,0 +1,20 @@
+<div class="container-fluid text-center d-flex justify-content-center">
+    <table class="table table table-striped">
+      <thead>
+        <tr>
+          <th>Codigo de Empleado</th>
+          <th>Nombre Completo</th>
+        </tr>
+      </thead>
+    
+      <tbody>
+        <% result.forEach(element => { %>
+          <tr>
+            <td><%= element.employee_code %></td>
+            <td><%= element.nombre_completo %></td>
+          </tr>
+        <% }) %> 
+      </tbody>
+
+    </table> 
+  </div>

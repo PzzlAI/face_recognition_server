@@ -15,10 +15,11 @@
 
 
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
-
-const password = 'dW4gY2hpc3Rl';
-const port = '5000';
-const domain = "app_db";
+require('dotenv').config();
+const backendPassword = process.env.BACKEND_PASS;
+const port = (process.env.PORTBACKEND).toString();
+const domain = process.env.DOMAINBACKEND;
+// const domain = process.env.LOCALBACKEND;
 
 
 async function getData(url = '', data = {}) {
@@ -28,8 +29,7 @@ async function getData(url = '', data = {}) {
       headers:  {
         'Accept': 'application/json',
         'Content-Type': 'application/json',   
-        'key': password
-       
+        'key': backendPassword
       },
       body: JSON.stringify(data),
     });
@@ -37,7 +37,10 @@ async function getData(url = '', data = {}) {
   }
 
 // Request
-const  getAdmin = (data) => {
+
+
+
+const  getAdminList = (data) => {
   url=`http://${domain}:${port}/read_administrators`;
   const response = getData(url,data )
   .then(result => {
@@ -47,16 +50,34 @@ const  getAdmin = (data) => {
   return response;
 }
 
+const  getCollaboratorList = (data) => {
+  url=`http://${domain}:${port}/read_collaborators`;
+  const response = getData(url,data )
+  .then(result => {
+    // console.log(res); // JSON data parsed by `data.json()` call
+    return result;
+  });
+  return response;
+}
+
+
+
+const verifyPassword = (data) =>{
+  console.log(data);
+  url=`http://${domain}:${port}/superadmin_login`; //agregar endpoint para validar  usuario contraseña
+  const response = getData(url,data)
+  .then(result => {
+    console.log(result); // JSON data parsed by `data.json()` call
+    return result;
+  });
+  return response;
+}
+
+
+
+
 const createAdmin = (data) =>{
   url=`http://${domain}:${port}/create_admin`;
-  data =  
-    {
-      "username": data.UserName,
-      "password": data.UserPass,
-      "company_code": 29, //ver como hacer esto dinamico
-      "employee_code":data.employee_code , // asignarle uno generado.
-      "nombre_completo":`${data.UserName} ${data.UserLastName}`
-    }
   const response = getData(url,data)
   .then(result => {
     // console.log(res); // JSON data parsed by `data.json()` call
@@ -65,4 +86,4 @@ const createAdmin = (data) =>{
   return response;
 }
 
- module.exports = {getAdmin,createAdmin};
+ module.exports = {getAdminList,getCollaboratorList,createAdmin,verifyPassword};
