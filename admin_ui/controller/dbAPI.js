@@ -74,8 +74,6 @@ const verifyPassword = (data) =>{
 }
 
 
-
-
 const createAdmin = (data) =>{
   url=`http://${domain}:${port}/create_admin`;
   const response = getData(url,data)

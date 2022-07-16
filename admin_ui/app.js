@@ -46,7 +46,7 @@ app.get('/crear-admin',requireAuth,(req,res)=>{
 app.post('/crear-admin', requireAuth,async(req,res)=>{
   console.log(req.body);
   const response = await apis.createAdmin({
-    "username": req.body.UserName,
+    "username": req.body.UserNick,
     "password": req.body.UserPass,
     "company_code": req.user.company_code, 
     "employee_code":req.body.employee_code , // asignarle uno generado.
