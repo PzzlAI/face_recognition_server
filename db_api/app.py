@@ -1,5 +1,6 @@
 from typing import Optional, List
 from fastapi import FastAPI, File, UploadFile,Form, Depends
+from fastapi.responses import FileResponse
 import pymongo
 from pymongo import MongoClient
 import uvicorn
@@ -394,7 +395,7 @@ async def update_collaborator(company_code: str = Form(...),
 # retornar colaborador, por el momento esta escrito para utilizar durante desarrollo, pero se refactorizara para uso en produccion.
 # cuando se refactorize tendria que ser el mismo endpoint para buscar colaborador o administrador.
 # este enpoint deberia ser get, pero no se puede mandar info por el body con get asi que por el momento lo voy a dejar como post.
-@app.post("/read_collaborator",  status_code=200)
+@app.post("/read_collaborator")
 async def read(employee_code_model: models.employee_code_model):
     db=""
     try:
@@ -425,6 +426,45 @@ async def read(employee_code_model: models.employee_code_model):
         if type(db)==MongoClient:
             db.close()
 
+
+@app.post("/get_image_paths")
+async def get_image_paths(employee_code_model: models.employee_code_model):
+    db=""
+    try:
+        db = get_db(employee_code_model.company_code)
+        if not db:
+            return{"code": 1001, "status": "Compañia no existe"}
+        
+        collection = db["colaboradores"]
+
+        employee = { "employee_code": employee_code_model.employee_code}
+        employee_data = collection.find_one(employee)
+
+        if not employee_data:
+            return{"code": 1005, "status": "empleado no existe"}
+
+        image_list = [path for path in employee_data['image_paths']]
+        print(image_list)
+        
+        return {"code": 7000, "status": "exito", "paths": image_list}
+
+    except Exception as e:
+        print(e)
+    finally:
+        if type(db)==MongoClient:
+            db.close()
+
+@app.post("/get_image_from_path")
+async def get_image_paths(path: str = Form(...)):
+    try:
+        if not os.path.exists(path):
+            return{"code": 1006, "status": "Directorio no existe"} 
+
+        return FileResponse(path)
+
+
+    except Exception as e:
+        print(e)
 
 # retornar lista completa de colaboradores, por el momento esta escrito para ser utilizado durante desarrollo, pero se refactorizara para uso en produccion.
 # este enpoint deberia ser get, pero no se puede mandar info por el body con get asi que por el momento lo voy a dejar como post.
