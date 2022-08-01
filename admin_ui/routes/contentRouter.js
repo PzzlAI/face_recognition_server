@@ -19,6 +19,6 @@ router.delete('/collaborators-list', requireAuth, contentController.delete_colla
 
 router.get('/collaborator-images-gallery', requireAuth, contentController.get_collaboratorPathsImages); 
 
-router.get('/collaborator-images', requireAuth, contentController.get_collaboratorImage);.
+router.get('/collaborator-images', requireAuth, contentController.get_collaboratorImage);
 
 module.exports = router;
