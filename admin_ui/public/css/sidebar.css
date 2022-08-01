@@ -63,5 +63,6 @@ body {
 .collaborator-image {
     height: auto;
     width: 18em;
+    margin: 1.1em;
     /*https://www.theodinproject.com/lessons/foundations-css-foundations*/
 }
