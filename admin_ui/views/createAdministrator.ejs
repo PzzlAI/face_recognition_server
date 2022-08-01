@@ -7,7 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
     <link rel="stylesheet" href="/css/sidebar.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
-    <title>Dashboard | sidebar</title>
+    <title>Crear administrador</title>
 </head>
 <body>
     <!-- Sidebar -->
@@ -19,7 +19,7 @@
         </div>
         <div class="row d-flex justify-content-md-center">
             <div class="col-12 col-md-8 col-lg-6 col-xl-5">
-                <form class="mb-md-5 mt-md-4 needs-validation" action="/crear-admin" method="POST" novalidate>
+                <form class="mb-md-5 mt-md-4 needs-validation" action="/create-administrator" method="POST" novalidate>
                     <div class="mb-3 p-3 p-md-5">
                         <!-- campos -->
                         <h1 class="display-4 text-center mb-4"> <strong> Formulario para crear administradores</strong></h2>
@@ -42,7 +42,7 @@
                             <input type="text" class="form-control" id="userLastName" placeholder="Ejemplo: Parker" name="UserLastName" required>
                             <div class="invalid-feedback">Porfavor llenar el campo.</div>
                         </div>
-                         <!-- usuario -->
+                         <!--3 usuario -->
                          <label for="user" class="form-label">Usuario</label>
                          <div class="input-group">
                              <span class="input-group-text">
@@ -51,7 +51,7 @@
                              <input type="text" class="form-control" id="user" placeholder="Ejemplo: pparker287" name="UserNick" required>
                              <div class="invalid-feedback">Porfavor llenar el campo.</div>
                          </div>
-                         <!-- contraseña -->
+                         <!--4 contraseña -->
                          <label for="password" class="form-label">Contraseña</label>
                          <div class="input-group">
                             <span class="input-group-text">
@@ -60,7 +60,8 @@
                             <input type="password" id="password" class="form-control" minlength="8" maxlength="16" placeholder="contraseña" name="UserPass" required/>
                             <div class="invalid-feedback">Porfavor llenar el campo.</div>
                          </div>
-                         <!-- email -->
+
+                         <!--5 email -->
                          <!-- <label for="useremail" class="form-label">Correo</label>
                          <div class="input-group">
                              <span class="input-group-text">
@@ -69,11 +70,13 @@
                              <input type="email" class="form-control" id="useremail" placeholder="Ejemplo: pparker@correo.com" name="UserEmail" required>
                              <div class="invalid-feedback">Porfavor llenar el campo.</div>
                          </div> -->
+                         
+                         <!--6 codigo de empleado -->
                          <label for="userCode" class="form-label">Codigo de Empleado</label>
                          <div class="input-group">
                              <span class="input-group-text">
                                 <i class="bi bi-123"></i>                             </span>
-                             <input type="text" class="form-control" id="userCode" placeholder="Valor Numerico" name="employee_code" required>
+                             <input type="number" class="form-control" id="userCode" placeholder="Valor Numerico" name="employee_code" required>
                              <div class="invalid-feedback">Porfavor llenar el campo.</div>
                          </div>
                         <!-- submit -->
@@ -81,7 +84,18 @@
                             <button class="btn btn-outline-light btn-lg px-2 mt-3 bg-primary" type="submit" value="submit">Guardar</button>
                         </div>
                 </form>
-                <p><%= response.status %> </p>
+                <!-- [x] Agregar Feedback y estilos al usuario -->
+                <!-- Feedback al usuario -->
+                <% if (locals.feedback) { %>
+                    <% if (locals.feedback.code == 2003) { %>
+                        <p class="text-center mt-2 text-danger">¡El codigo de empleado ya existe!</p>
+                    <% } else if(locals.feedback.code == 2004) {%>
+                        <p class="text-center mt-2 text-danger">¡El nombre de usuario no esta disponible!</p>
+                    <%} else if (locals.feedback.code == 7001) { %>
+                        <p class="text-center mt-2 text-success"> ¡Administrador creado exitosamente!</p>
+                    <% } %> 
+                <% } %>
+                
             </div>
         </div>
         
@@ -93,3 +107,4 @@
     <script src="./js/validation.js"></script>
 </body>
 </html>
+ 

@@ -31,12 +31,22 @@
                     </div>
       
                     <div class="form-outline form-white mb-4">
-                    <label class="form-label" for="typePasswordX">Escriba su contraseña:</label>
-                    <input type="password" id="typePasswordX" class="form-control form-control-lg text-center" minlength="8" maxlength="16" placeholder="contraseña" name="UserPass" required/>
-                    <div class="valid-feedback"></div>
-
+                      <label class="form-label" for="typePasswordX">Escriba su contraseña:</label>
+                      <input type="password" id="typePasswordX" class="form-control form-control-lg text-center" minlength="8" maxlength="16" placeholder="contraseña" name="UserPass" required/>
+                      <div class="valid-feedback"></div>
                     </div>
-      
+                    <!-- [x] Agregar feedback al usuario -->
+                    <!-- Feedback para el usuario -->
+                    <% if (locals.result) { %>
+                      <% if (locals.result.code == 6001) { %>
+                        <p class="text-danger">Contraseña incorrecta</p> 
+                      <%} else if (locals.result.code == 1004) { %>
+                        <p class="text-danger">Usuario no encontrado</p>
+                      <% } %>
+                    <% } %>
+
+
+
                     <!-- <p class="small mb-5 pb-lg-2"><a class="text-white-50" href="#!">Forgot password?</a></p> -->
 
                     <button class="btn btn-outline-light btn-lg px-5" type="submit">Login</button>

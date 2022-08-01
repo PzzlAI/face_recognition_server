@@ -4,22 +4,26 @@ services:
   app_db:
     build: ./db_api
     command: python -u app.py
+    container_name: app_db
+    image: db_api:v0.2.0-alpha   #[x] Agregar nombre y tag de version de la imagen
     ports:
       - "5000:5000"
     volumes:
-      - app_db:/app/db
+      - app_db:/app/db      #TODO Revisar la correcta implementacion de volumes
     links:
       - db
     environment:
-      - API_KEY=dW4gY2hpc3Rl
-      - API_KEY_NAME=key
+      - API_KEY=dW4gY2hpc3Rl #FIXME Hay que quitar esto de aqui y ponerlo en un archivo .env dentro de la carpeta correspondiente.
+      - API_KEY_NAME=key     #FIXME Hay que quitar esto de aqui y ponerlo en un archivo .env dentro de la carpeta correspondiente.
     networks:
       - backend-network
       - db-network
-
+      
   app_df:
     build: ./df_api
     command: python -u app.py
+    container_name: app_df
+    image: df_api:v0.1.0-alpha     #[x] Agregar nombre y tag de version de la imagen
     ports:
       - "8000:8000"
     volumes:
@@ -27,8 +31,8 @@ services:
     links:
       - db
     environment:
-      - API_KEY=dW4gY2hpc3Rl
-      - API_KEY_NAME=key
+      - API_KEY=dW4gY2hpc3Rl #FIXME Hay que quitar esto de aqui y ponerlo en un archivo .env dentro de la carpeta correspondiente.
+      - API_KEY_NAME=key     #FIXME Hay que quitar esto de aqui y ponerlo en un archivo .env dentro de la carpeta correspondiente.
     networks:
       - backend-network
 
@@ -36,9 +40,9 @@ services:
     image: mongo:latest
     hostname: test_mongodb
     environment:
-      - MONGO_INITDB_DATABASE=face_recognition_db
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=pass
+      - MONGO_INITDB_DATABASE=face_recognition_db #FIXME Hay que quitar esto de aqui y ponerlo en un archivo .env dentro de la carpeta correspondiente.
+      - MONGO_INITDB_ROOT_USERNAME=root           #FIXME Hay que quitar esto de aqui y ponerlo en un archivo .env dentro de la carpeta correspondiente.
+      - MONGO_INITDB_ROOT_PASSWORD=pass           #FIXME Hay que quitar esto de aqui y ponerlo en un archivo .env dentro de la carpeta correspondiente.
     volumes:
       - mongodbdata:/data/db
     ports:
@@ -48,6 +52,7 @@ services:
 
   admin_ui_app:
     container_name: admin_ui
+    image: admin_ui:v0.2.1-alpha      #[x] Agregar nombre y tag de version de la imagen
     build:
       context: admin_ui
       dockerfile: Dockerfile
@@ -57,6 +62,8 @@ services:
       - backend-network
     depends_on:
       - app_db
+    env_file:                 # [x] Agregar lectura de env desde fichero
+      - prod.env
 
 volumes:
   app_db:

@@ -1,50 +1,67 @@
-*{
+* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
-body{
+
+body {
     min-height: 100vh;
     background-color: #fff;
 }
 
-.navbar{
+.navbar {
     width: 250px;
     height: 160vh;
     position: fixed;
     margin-left: -300px;
     transition: 0.4s;
 }
-.nav-link{
+
+.nav-link {
     font-size: 1.25em;
 }
-.nav-link:active,.nav-link:focus,.nav-link:hover{
+
+.nav-link:active,
+.nav-link:focus,
+.nav-link:hover {
     background-color: #ffffff26;
 }
-.my-contianer{
-    transition: 0.4s; 
+
+.my-contianer {
+    transition: 0.4s;
 }
 
 /* for navbar */
-.active-nav{
+.active-nav {
     margin-left: 0;
 }
+
 /* for main section */
-.active-cont{
+.active-cont {
     margin-left: 300px;
 }
-#menu-btn{
+
+/*TODO Agregar esto a otro css para que solo el contenido tenga su css  */
+#menu-btn {
     color: white;
 }
 
-#menu-btn:focus{
+#menu-btn:focus {
     box-shadow: 0 0 0 0.25em rgb(198, 198, 198);
 }
-#logo{
+
+#logo {
     height: auto;
     width: 18em;
 }
 
-#menu-space,body{
+#menu-space,
+body {
     background-color: rgb(229, 238, 241);
+}
+
+.collaborator-image {
+    height: auto;
+    width: 18em;
+    /*https://www.theodinproject.com/lessons/foundations-css-foundations*/
 }
