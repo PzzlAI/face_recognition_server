@@ -5,7 +5,7 @@ services:
     build: ./db_api
     command: python -u app.py
     container_name: app_db
-    image: db_api:v0.2.0-alpha   #[x] Agregar nombre y tag de version de la imagen
+    image: db_api:v0.2.0-alpha 
     ports:
       - "5000:5000"
     volumes:
@@ -23,7 +23,7 @@ services:
     build: ./df_api
     command: python -u app.py
     container_name: app_df
-    image: df_api:v0.1.0-alpha     #[x] Agregar nombre y tag de version de la imagen
+    image: df_api:v0.1.0-alpha     
     ports:
       - "8000:8000"
     volumes:
@@ -52,7 +52,7 @@ services:
 
   admin_ui_app:
     container_name: admin_ui
-    image: admin_ui:v0.2.1-alpha      #[x] Agregar nombre y tag de version de la imagen
+    image: admin_ui:v0.2.1-alpha  
     build:
       context: admin_ui
       dockerfile: Dockerfile
@@ -62,7 +62,7 @@ services:
       - backend-network
     depends_on:
       - app_db
-    env_file:                 # [x] Agregar lectura de env desde fichero
+    env_file:                 
       - prod.env
 
 volumes:

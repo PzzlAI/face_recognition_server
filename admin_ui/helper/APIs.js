@@ -13,8 +13,7 @@
 //  'Content-Type':'application/x-www-form-urlencode'
 //  mode: 'cors', // no-cors, *cors, same-origin
 
-//[x] Definir bien donde va este modulo es decir si es un controller u otra cosa.
-//[x] Cambiar placement de las funciones helper https://javascript.info/coding-style#function-placement
+//https://javascript.info/coding-style#function-placement
 
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 require('dotenv').config();
@@ -79,7 +78,6 @@ const createAdministrator = (username, password, company_code, employee_code, na
   return feedback;
 };
 
-// [x] Agregar funcion para solicitar borrado de administrador
 const deleteAdministrator = (company_code, employee_code) => {
   const url = `http://${API_DOMAIN}:${API_PORT}/delete_admin`;
   const body = {
@@ -93,7 +91,6 @@ const deleteAdministrator = (company_code, employee_code) => {
   return feedback;
 };
 
-// [x] Agregar funcion para solicitar borrado de colaborador
 const deleteCollaborator = (company_code, employee_code) => {
   const url = `http://${API_DOMAIN}:${API_PORT}/delete_collaborator`;
   const body = {
@@ -107,7 +104,6 @@ const deleteCollaborator = (company_code, employee_code) => {
   return feedback;
 };
 
-// [x] Agregar funcion para solicitar paths de imagenes del colaborador
 const getCollaboratorPathsImages = (company_code, employee_code) => {
   const url = `http://${API_DOMAIN}:${API_PORT}/get_image_paths`;
   const body = {
@@ -120,7 +116,7 @@ const getCollaboratorPathsImages = (company_code, employee_code) => {
     });
   return pathsImages;
 }
-// [x] Agregar funcion para solicitar imagen del colaborador
+
 const getCollaboratorImage = (path) => {
   const url = `http://${API_DOMAIN}:${API_PORT}/get_image_from_path`;
   body = {
@@ -135,7 +131,7 @@ const getCollaboratorImage = (path) => {
 
 async function fetchData(url = '', body = {}, method = 'POST') {
   const promise = await fetch(url, {
-    method, //[x] *GET, POST, PUT, DELETE, etc.  Asignar el tipo de metodo en las funciones
+    method, 
     headers: {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
@@ -145,7 +141,7 @@ async function fetchData(url = '', body = {}, method = 'POST') {
   });
   return promise;
 }
-// [x] Crear funcion para fetch imagenes
+
 async function fetchImage(url, body) {
   const promise = await fetch(url, {
     method: 'POST',

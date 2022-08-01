@@ -1,4 +1,3 @@
-// [x] Agregar accion de borrar fila en la tabla y enviar peticion de borrado para colaboradores
 const userRaw = document.querySelector('tbody');
 
 userRaw.addEventListener('click',e=>{

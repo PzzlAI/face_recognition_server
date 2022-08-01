@@ -1,7 +1,5 @@
-//[x] Crear controller del contenido
-
 //TODO Validar campos vacios en el body. Posiblemente crear un adapter*
-// 
+
 const apis = require('../helper/APIs');
 
 module.exports.get_homePage = (req, res) => {
@@ -47,7 +45,7 @@ module.exports.get_collaboratorsList = async (req, res) => {
     res.status(400).send(err);
   }
 };
-// [x] Agregar controller de borrar administrador
+
 module.exports.delete_administrator = async (req, res) => {
   try {
     const deleteAdministratorFeedBack = await apis.deleteAdministrator(req.user.company_code, req.query.employee_code);
@@ -56,7 +54,7 @@ module.exports.delete_administrator = async (req, res) => {
     res.status(400).send(err);
   }
 };
-// [x] Agregar controller de borrar colaborador
+
 module.exports.delete_collaborator = async (req, res) => {
   try {
     const deleteCollaboratorFeedback = await apis.deleteCollaborator(req.user.company_code, req.query.employee_code);
@@ -65,7 +63,7 @@ module.exports.delete_collaborator = async (req, res) => {
     res.status(400).send(err);
   }
 };
-// [x] Agregar controller de obtener sitio de galeria de imagenes de colaborador
+
 module.exports.get_collaboratorPathsImages = async (req, res) => {
   try {
     const pathsImages = await apis.getCollaboratorPathsImages(req.user.company_code, req.query.employee_code);
@@ -74,7 +72,7 @@ module.exports.get_collaboratorPathsImages = async (req, res) => {
     res.status(400).send(err);
   }
 };
-// [x] Agregar controller de obtener imagen de colaborador
+
 module.exports.get_collaboratorImage = async (req, res) => {
   try {
     const image = await apis.getCollaboratorImage(req.query.path);

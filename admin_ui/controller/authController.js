@@ -21,7 +21,7 @@ module.exports.login_post =  async(req,res)=>{
         res.redirect('/');
     }
     else{
-        //[x] Agregar feedback en caso de introduccion mal de credenciales
+
         res.render('login',{result: response});
     }
 };

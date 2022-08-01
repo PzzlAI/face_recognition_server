@@ -11,14 +11,14 @@ router.post('/create-administrator', requireAuth, contentController.post_createA
 
 router.get('/administrators-list', requireAuth, contentController.get_administratorsList);
 
-router.delete('/administrators-list', requireAuth, contentController.delete_administrator); // [x] Agregar middleware de borrar administrdores
+router.delete('/administrators-list', requireAuth, contentController.delete_administrator); 
 
 router.get('/collaborators-list', requireAuth, contentController.get_collaboratorsList);
 
-router.delete('/collaborators-list', requireAuth, contentController.delete_collaborator); // [x] Agregar middleware de borrar colaboradores
+router.delete('/collaborators-list', requireAuth, contentController.delete_collaborator); 
 
-router.get('/collaborator-images-gallery', requireAuth, contentController.get_collaboratorPathsImages); //[x] Agregar middleware de galeria de imagenes del colaborador de lista de colaboradores.
+router.get('/collaborator-images-gallery', requireAuth, contentController.get_collaboratorPathsImages); 
 
-router.get('/collaborator-images', requireAuth, contentController.get_collaboratorImage);//[x] Agregar middleware obtener de imagenes del colaborador.
+router.get('/collaborator-images', requireAuth, contentController.get_collaboratorImage);.
 
 module.exports = router;

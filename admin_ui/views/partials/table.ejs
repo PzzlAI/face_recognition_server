@@ -9,13 +9,10 @@
       </thead>
     
       <tbody>
-        <!-- [x] Agregar orden a la lista -->
-        <!-- [x] Agregar accion de borrar empleado -->
         <% locals.employees.sort((a,b)=> a.employee_code - b.employee_code) %>        
         <% locals.employees.forEach(employee => { %>
           <tr id="<%= employee.employee_code %>">
             <td><%= employee.employee_code %></td>
-            <!-- [x] Agregar validacion de que pagina lo esta solicitando -->
             <% if (locals.webTitle==="collaboratorsList") { %>
               <td><a href="/collaborator-images-gallery?employee_code=<%= employee.employee_code %>&fullname=<%= employee.nombre_completo %>" class="link-secondary"><%= employee.nombre_completo %></a></td>
             <% } else { %>
