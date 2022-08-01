@@ -52,7 +52,7 @@ services:
 
   admin_ui_app:
     container_name: admin_ui
-    image: admin_ui:v0.2.1-alpha  
+    image: admin_ui:v0.2.2-alpha  
     build:
       context: admin_ui
       dockerfile: Dockerfile
